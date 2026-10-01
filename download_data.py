@@ -5,7 +5,7 @@ Aufruf im Projektordner:
     uv run python download_data.py --force    # lädt alles neu
 
 Die Dateien landen in data/raw/. Welche Daten geladen werden, steht
-im Abschnitt KONFIGURATION. Neue Quellen trägst du nur dort ein.
+im Abschnitt KONFIGURATION. Neue Quellen werden dort hinzugefügt.
 """
 
 import argparse
@@ -16,7 +16,7 @@ from pathlib import Path
 
 import requests
 
-# Workaround für deinen Rechner: Ist SSLKEYLOGFILE gesetzt, scheitert
+# Workaround: Ist SSLKEYLOGFILE gesetzt, scheitert
 # jede HTTPS-Verbindung mit PermissionError. Wirkt nur für dieses Skript.
 os.environ.pop("SSLKEYLOGFILE", None)
 
@@ -33,11 +33,18 @@ KDVALUES_URL = "https://statistik.leipzig.de/opendata/api/kdvalues"
 INDIKATOREN = {
     # Name der Datei:      (kategorie_nr, rubrik_nr)
     "einwohnerdichte":     (2, 9),
-    "einwohner":           (2, 6),   # nach Geschlecht und Staatsangehörigkeit
+    "einwohner":           (2, 1),   # nur Hauptwohnsitze; (2, 6) wären Haupt- + Nebenwohnsitze
     "geborene_gestorbene": (3, 1),
     "schulabschluesse":    (5, 3),   # Umfragedaten
     "straftaten":          (12, 1),
     # hier weitere ergänzen, z. B. Arbeitslose oder Einwohner nach Alter
+}
+
+# Wahlen liegen nicht je Jahr vor, sondern je Wahltermin (periode=d statt y).
+# Gleiches Schema wie oben, landen ebenfalls in kleinraeumig/.
+WAHLEN = {
+    "landtagswahlen":      (15, 4),
+    # weitere: Europa (15, 1), Bundestag (15, 3), Stadtrat (15, 5), OBM (15, 7)
 }
 
 # Einzelne Dateien mit fester URL
@@ -99,8 +106,7 @@ def herunterladen(url: str, ziel: Path, params: dict | None = None, force: bool 
     with SESSION.get(url, params=params, stream=True, timeout=60) as antwort:
         antwort.raise_for_status()
         with open(temp, "wb") as f:
-            for stueck in antwort.iter_content(chunk_size=1024 * 1024):
-                f.write(stueck)
+            f.writelines(antwort.iter_content(chunk_size=1024 * 1024))
         tatsaechliche_url = antwort.url
 
     temp.replace(ziel)
@@ -133,8 +139,10 @@ def main() -> None:
     for name, url in DATEIEN.items():
         aufgaben.append((name, lambda url=url, name=name: herunterladen(url, RAW_DIR / name, force=force)))
 
-    for name, (kategorie, rubrik) in INDIKATOREN.items():
-        params = {"kategorie_nr": kategorie, "rubrik_nr": rubrik, "periode": "y", "format": "csv"}
+    kleinraeumig = [(name, nummern, "y") for name, nummern in INDIKATOREN.items()]
+    kleinraeumig += [(name, nummern, "d") for name, nummern in WAHLEN.items()]
+    for name, (kategorie, rubrik), periode in kleinraeumig:
+        params = {"kategorie_nr": kategorie, "rubrik_nr": rubrik, "periode": periode, "format": "csv"}
         ziel = RAW_DIR / "kleinraeumig" / f"{name}.csv"
         aufgaben.append((name, lambda p=params, z=ziel: herunterladen(KDVALUES_URL, z, params=p, force=force)))
 

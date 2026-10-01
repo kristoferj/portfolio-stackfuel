@@ -16,8 +16,8 @@
     "geladen_am": "2026-09-29T21:34:45"
   },
   "kleinraeumig/einwohner.csv": {
-    "url": "https://statistik.leipzig.de/opendata/api/kdvalues?kategorie_nr=2&rubrik_nr=6&periode=y&format=csv",
-    "geladen_am": "2026-09-29T21:34:48"
+    "url": "https://statistik.leipzig.de/opendata/api/kdvalues?kategorie_nr=2&rubrik_nr=1&periode=y&format=csv",
+    "geladen_am": "2026-10-01T12:55:47"
   },
   "kleinraeumig/geborene_gestorbene.csv": {
     "url": "https://statistik.leipzig.de/opendata/api/kdvalues?kategorie_nr=3&rubrik_nr=1&periode=y&format=csv",
@@ -38,5 +38,9 @@
   "buergerumfrage/buergerumfrage_2024_haushalt.csv": {
     "url": "https://opendata.leipzig.de/dataset/03f75b80-e11c-4ff9-bf4f-5e5d6ce8cbcb/resource/84889696-3377-4c8d-978d-353f5f174bb7/download/ergebnisse_kbu_2024_haushalt.csv",
     "geladen_am": "2026-09-29T21:35:09"
+  },
+  "kleinraeumig/landtagswahlen.csv": {
+    "url": "https://statistik.leipzig.de/opendata/api/kdvalues?kategorie_nr=15&rubrik_nr=4&periode=d&format=csv",
+    "geladen_am": "2026-10-01T12:56:29"
   }
 }

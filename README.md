@@ -50,11 +50,16 @@ uv run python download_data.py --force    # lädt alles neu
 | Ordner | Inhalt | Quelle |
 |---|---|---|
 | `geodaten/` | Grenzen der Ortsteile und Stadtbezirke (GeoJSON, UTM 33N) | [Open-Data-Portal Leipzig](https://opendata.leipzig.de/dataset/geodaten-ortsteile-leipzig) |
-| `kleinraeumig/` | Statistik je Ortsteil und Stadtbezirk, Jahreswerte: Einwohnerdichte, Einwohner, Geborene und Gestorbene, Schul- und Berufsabschlüsse, Straftaten | [Amt für Statistik und Wahlen](https://statistik.leipzig.de) |
+| `kleinraeumig/` | Statistik je Ortsteil und Stadtbezirk. Jahreswerte: Einwohnerdichte, Einwohner, Geborene und Gestorbene, Schul- und Berufsabschlüsse, Straftaten. Je Wahltermin: Landtagswahlen (1994–2024) | [Amt für Statistik und Wahlen](https://statistik.leipzig.de) |
 | `gtfs/` | Fahrplan der LVB im GTFS-Format, Stand 28.12.2022 | [LVB-Fahrplandaten](https://opendata.leipzig.de/dataset/lvb-fahrplandaten) |
 | `buergerumfrage/` | Kommunale Bürgerumfrage 2024, personen- und haushaltsgewichtet | [Open-Data-Portal Leipzig](https://opendata.leipzig.de) |
 
 Alle Daten stehen unter der [Datenlizenz Deutschland – Namensnennung 2.0](https://www.govdata.de/dl-de/by-2-0). Quelle: Stadt Leipzig.
+
+### Hinweise zu den Daten (für Fußnoten im Dashboard)
+
+- **Einwohner** (`einwohner.csv`, Kategorie 2 / Rubrik 1) zählt nur **Hauptwohnsitze**. Der ähnliche Datensatz „Wohnberechtigte Einwohner“ (2 / 6) enthält zusätzlich Nebenwohnsitze und wird bewusst nicht verwendet.
+- **Schul- und Berufsabschlüsse** beruhen auf Umfragedaten und liegen nur alle zwei Jahre vor (2011–2023).
 
 ### Verhalten
 
@@ -72,7 +77,9 @@ Alle Quellen stehen oben im Skript im Abschnitt `KONFIGURATION`. Einen neuen kle
 "arbeitslose": (kategorie_nr, rubrik_nr),
 ```
 
-Die beiden Nummern findest du auf dem [Open-Data-Portal](https://opendata.leipzig.de) (Suche nach „kleinräumig") in der Download-URL des Datensatzes.
+Die beiden Nummern findest du auf dem [Open-Data-Portal](https://opendata.leipzig.de) (Suche nach „kleinräumig") in der Download-URL des Datensatzes. Verlass dich dabei auf Titel und Download-Link, nicht auf die Adresse der Seite: Die Adressen sind auf dem Portal teilweise vertauscht (`…/stadtratswahlen-kleinraumig` enthält zum Beispiel die Landtagswahlen).
+
+Wahlen stehen nicht je Jahr, sondern je Wahltermin zur Verfügung (`periode=d` statt `y` in der URL). Sie gehören deshalb in `WAHLEN` statt in `INDIKATOREN`.
 
 ## Testdiagramm
 
