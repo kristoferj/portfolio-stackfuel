@@ -11,6 +11,7 @@ Inspiriert von [„M29 – Berlins Buslinie der großen Unterschiede"](https://i
 ```bash
 uv sync                                  # Umgebung einrichten
 uv run python download_data.py           # Rohdaten laden (einmalig)
+# danach 02_aufbereitung.ipynb ausführen   # Daten aufbereiten
 uv run python test_diagramm.py           # Testdiagramm erzeugen
 ```
 
@@ -34,8 +35,9 @@ uv sync
 | `test_diagramm.py` | Erstes Diagramm: ein Indikator entlang einer Linie |
 | `test_diagramm.html` | Ergebnis von `test_diagramm.py` |
 | `01_geodaten.ipynb` | Notebook: Ortsteile, Stadtbezirke und die Linie 8 auf der Karte |
-| `main.py` | Platzhalter aus `uv init`, wird nicht genutzt |
+| `02_aufbereitung.ipynb` | Notebook: bringt alle kleinräumigen Daten in ein einheitliches langes Format (`data/processed/`) |
 | `data/raw/` | Rohdaten, entsteht beim Download (nicht versioniert, außer `download_protokoll.json`) |
+| `data/processed/` | Aufbereitete Daten, entsteht mit `02_aufbereitung.ipynb` (nicht versioniert) |
 
 ## Datenbeschaffung
 

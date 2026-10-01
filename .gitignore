@@ -17,3 +17,6 @@ ENTSCHEIDUNGEN.md
 # Das Protokoll bleibt drin, damit nachvollziehbar ist, was wann geladen wurde.
 data/raw/*
 !data/raw/download_protokoll.json
+
+# Aufbereitete Daten: entstehen mit 02_aufbereitung.ipynb
+data/processed/
