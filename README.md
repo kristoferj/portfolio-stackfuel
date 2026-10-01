@@ -34,6 +34,9 @@ uv sync
 | `download_data.py` | Lädt alle Rohdaten nach `data/raw/` |
 | `test_diagramm.py` | Erstes Diagramm: ein Indikator entlang einer Linie |
 | `test_diagramm.html` | Ergebnis von `test_diagramm.py` |
+| `test_dashboard.py` | Test-Dashboard: alle aufbereiteten Indikatoren entlang der Linie 8, mit Zeitauswahl |
+| `test_dashboard_vorlage.html` | HTML-Vorlage des Test-Dashboards (Layout und Diagramme) |
+| `test_dashboard.html` | Ergebnis von `test_dashboard.py` |
 | `01_geodaten.ipynb` | Notebook: Ortsteile, Stadtbezirke und die Linie 8 auf der Karte |
 | `02_aufbereitung.ipynb` | Notebook: bringt alle kleinräumigen Daten in ein einheitliches langes Format (`data/processed/`) |
 | `data/raw/` | Rohdaten, entsteht beim Download (nicht versioniert, außer `download_protokoll.json`) |

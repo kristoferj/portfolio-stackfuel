@@ -1,0 +1,577 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Linie 8 – Test-Dashboard</title>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<style>
+  :root {
+    color-scheme: light;
+    --page: #f9f9f7;
+    --surface: #fcfcfb;
+    --band: #f3f2ee;
+    --text-1: #0b0b0b;
+    --text-2: #52514e;
+    --muted: #898781;
+    --grid: #e1e0d9;
+    --axis: #c3c2b7;
+    --border: rgba(11, 11, 11, 0.10);
+    --series-1: #2a78d6;
+    --accent-wash: #cde2fb;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --page: #0d0d0d;
+      --surface: #1a1a19;
+      --band: #222221;
+      --text-1: #ffffff;
+      --text-2: #c3c2b7;
+      --muted: #898781;
+      --grid: #2c2c2a;
+      --axis: #383835;
+      --border: rgba(255, 255, 255, 0.10);
+      --series-1: #3987e5;
+      --accent-wash: #104281;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--page);
+    color: var(--text-1);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  main { max-width: 1280px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 26px; line-height: 1.2; margin: 0 0 4px; }
+  h2 { font-size: 17px; margin: 0; }
+  p { margin: 0; }
+  .lead { color: var(--text-2); max-width: 70ch; }
+  .test-hinweis {
+    display: inline-block; margin-bottom: 12px; padding: 2px 10px;
+    border: 1px solid var(--border); border-radius: 999px;
+    color: var(--text-2); font-size: 12px;
+  }
+
+  .filter {
+    display: flex; flex-wrap: wrap; gap: 16px; align-items: end;
+    margin: 24px 0 16px;
+  }
+  .feld { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .feld > span, .feld > label { font-size: 12px; color: var(--text-2); }
+  select, button, input { font: inherit; color: inherit; }
+  select {
+    padding: 7px 10px; border: 1px solid var(--axis); border-radius: 8px;
+    background: var(--surface); max-width: 100%;
+  }
+  #merkmal { min-width: 240px; }
+  .ansicht { display: flex; border: 1px solid var(--axis); border-radius: 8px; overflow: hidden; }
+  .ansicht button {
+    padding: 7px 12px; border: 0; background: var(--surface); cursor: pointer;
+    border-left: 1px solid var(--axis);
+  }
+  .ansicht button:first-child { border-left: 0; }
+  .ansicht button[aria-pressed="true"] { background: var(--accent-wash); font-weight: 600; }
+  .zeit { flex: 1 1 260px; }
+  .zeit-zeile { display: flex; gap: 12px; align-items: center; }
+  .zeit input { flex: 1; min-width: 120px; accent-color: var(--series-1); }
+  .zeit output { font-weight: 600; font-variant-numeric: tabular-nums; min-width: 9ch; text-align: right; }
+
+  .kacheln { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+  .kachel {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 16px; min-width: 0;
+  }
+  .kachel .titel { font-size: 12px; color: var(--text-2); }
+  .kachel .zahl { font-size: 26px; font-weight: 600; line-height: 1.25; }
+  .kachel .dazu { font-size: 13px; color: var(--text-2); overflow-wrap: anywhere; }
+
+  .karte {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px; margin-bottom: 16px;
+  }
+  .karte header { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-between; align-items: end; }
+  .karte header p { color: var(--text-2); font-size: 13px; }
+  .diagramm { width: 100%; }
+  .unterzeile { color: var(--text-2); font-size: 13px; margin-top: 4px; }
+
+  details { margin-top: 8px; }
+  summary { cursor: pointer; color: var(--text-2); font-size: 13px; }
+  .tabelle-rahmen { overflow-x: auto; margin-top: 8px; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  th, td { text-align: left; padding: 5px 10px; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+  th { color: var(--text-2); font-weight: 600; }
+  td.zahl, th.zahl { text-align: right; font-variant-numeric: tabular-nums; }
+
+  .fussnoten { color: var(--text-2); font-size: 13px; }
+  .fussnoten h2 { color: var(--text-1); margin-bottom: 8px; }
+  .fussnoten ul { margin: 0; padding-left: 18px; }
+  .fussnoten li { margin-bottom: 4px; max-width: 95ch; }
+
+  @media (max-width: 760px) {
+    .kacheln { grid-template-columns: repeat(2, 1fr); }
+    h1 { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <span class="test-hinweis">Test-Dashboard · prüft, wie gut die aufbereiteten Daten passen</span>
+  <h1>Gipfel und Talfahrt der Linie 8</h1>
+  <p class="lead">Von Grünau-Nord nach Paunsdorf Nord: Wie verändert sich Leipzig von Haltestelle zu Haltestelle? Wähle einen Indikator und einen Zeitpunkt.</p>
+
+  <div class="filter">
+    <div class="feld">
+      <label for="indikator">Indikator</label>
+      <select id="indikator"></select>
+    </div>
+    <div class="feld">
+      <label for="merkmal">Merkmal</label>
+      <select id="merkmal"></select>
+    </div>
+    <div class="feld">
+      <span id="ansicht-label">Ansicht</span>
+      <div class="ansicht" role="group" aria-labelledby="ansicht-label">
+        <button type="button" data-ansicht="einzeln" aria-pressed="true">Ein Zeitpunkt</button>
+        <button type="button" data-ansicht="alle" aria-pressed="false">Alle Zeitpunkte</button>
+        <button type="button" data-ansicht="heatmap" aria-pressed="false">Heatmap</button>
+      </div>
+    </div>
+    <div class="feld zeit">
+      <label for="zeit">Zeitpunkt</label>
+      <div class="zeit-zeile">
+        <input type="range" id="zeit" min="0" max="0" step="1" value="0">
+        <output id="zeit-anzeige" for="zeit"></output>
+      </div>
+    </div>
+  </div>
+
+  <div class="kacheln" id="kacheln"></div>
+
+  <section class="karte">
+    <header>
+      <div>
+        <h2 id="titel-linie"></h2>
+        <p id="unter-linie"></p>
+      </div>
+    </header>
+    <div id="diagramm-linie" class="diagramm"></div>
+    <details>
+      <summary>Werte als Tabelle</summary>
+      <div class="tabelle-rahmen"><table id="tabelle"></table></div>
+    </details>
+  </section>
+
+  <section class="karte">
+    <header>
+      <div>
+        <h2 id="titel-zeit"></h2>
+        <p id="unter-zeit"></p>
+      </div>
+      <div class="feld">
+        <label for="ortsteil">Ortsteil (oder Haltestelle oben anklicken)</label>
+        <select id="ortsteil"></select>
+      </div>
+    </header>
+    <div id="diagramm-zeit" class="diagramm"></div>
+    <p class="unterzeile" id="hinweis-zeit"></p>
+  </section>
+
+  <section class="karte fussnoten">
+    <h2>Hinweise zu den Daten</h2>
+    <ul id="fussnoten"></ul>
+  </section>
+</main>
+
+<script>
+const D = /*DATEN*/null;
+
+// Blaue Ein-Farb-Rampe, hell nach dunkel (Stufen 100 bis 700)
+const RAMPE = ["#cde2fb", "#b7d3f6", "#9ec5f4", "#86b6ef", "#6da7ec", "#5598e7", "#3987e5",
+               "#2a78d6", "#256abf", "#1c5cab", "#184f95", "#104281", "#0d366b"];
+const GRENZJAHRE = [2006, 2012, 2014];   // Ortsteilgrenzen angepasst
+const SCHRIFT = 'system-ui, -apple-system, "Segoe UI", sans-serif';
+
+const el = id => document.getElementById(id);
+const dunkel = () => matchMedia("(prefers-color-scheme: dark)").matches;
+const farbe = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+const zustand = { ind: null, merk: null, zi: 0, ansicht: "einzeln", ot: null };
+
+// ---------- Hilfsfunktionen ----------
+
+function zahl(v) {
+  if (v === null || v === undefined) return "–";
+  const a = Math.abs(v);
+  const stellen = a >= 100 ? 0 : a >= 10 ? 1 : 2;
+  return v.toLocaleString("de-DE", { maximumFractionDigits: stellen });
+}
+
+const reihe = () => D.daten[zustand.ind][zustand.merk];
+const indikator = () => D.indikatoren.find(i => i.indikator === zustand.ind);
+const ortsteile = [...new Set(D.stops.map(s => s.ortsteil))];
+
+// Zusammenhängende Abschnitte der Linie im selben Ortsteil
+const abschnitte = [];
+D.stops.forEach((s, i) => {
+  const letzter = abschnitte[abschnitte.length - 1];
+  if (letzter && letzter.ortsteil === s.ortsteil) letzter.bis = i + 1;
+  else abschnitte.push({ ortsteil: s.ortsteil, von: i + 1, bis: i + 1 });
+});
+
+// Ist der Stadtwert mit den Ortsteilwerten vergleichbar? Bei absoluten Zahlen
+// (z. B. Einwohner) ist die Stadt um Größenordnungen größer, dann nicht zeigen.
+function vergleichbar(stadtwert, werte) {
+  const w = werte.filter(v => v !== null);
+  if (stadtwert === null || !w.length) return false;
+  const lo = Math.min(...w), hi = Math.max(...w);
+  const spanne = Math.max(hi - lo, Math.abs(hi) * 0.25, 1e-9);
+  return stadtwert >= lo - spanne && stadtwert <= hi + spanne;
+}
+
+function rampenfarbe(k, n) {
+  // Linien: auf hell von Stufe 250 bis 700, auf dunkel von Stufe 600 bis 100
+  const [von, bis] = dunkel() ? [10, 0] : [3, 12];
+  const t = n > 1 ? k / (n - 1) : 1;
+  return RAMPE[Math.round(von + (bis - von) * t)];
+}
+
+function grundlayout(hoehe) {
+  return {
+    height: hoehe,
+    paper_bgcolor: farbe("--surface"),
+    plot_bgcolor: farbe("--surface"),
+    font: { family: SCHRIFT, size: 12, color: farbe("--text-2") },
+    separators: ",.",
+    showlegend: false,
+    hoverlabel: { bgcolor: farbe("--surface"), bordercolor: farbe("--axis"), font: { family: SCHRIFT, color: farbe("--text-1") } },
+    yaxis: { gridcolor: farbe("--grid"), zeroline: false, tickfont: { color: farbe("--muted") }, automargin: true, separatethousands: true, exponentformat: "none" },
+  };
+}
+
+const PLOT_OPTIONEN = { responsive: true, displayModeBar: false };
+
+// ---------- Diagramm 1: entlang der Linie ----------
+
+function achseHaltestellen() {
+  return {
+    tickvals: D.stops.map((_, i) => i + 1),
+    ticktext: D.stops.map(s => s.name),
+    tickangle: -55,
+    tickfont: { size: 10, color: farbe("--muted") },
+    showgrid: false,
+    linecolor: farbe("--axis"),
+    range: [0.5, D.stops.length + 0.5],
+    fixedrange: true,
+  };
+}
+
+function ortsteilBaender() {
+  const shapes = [], annotations = [];
+  abschnitte.forEach((a, i) => {
+    if (i % 2 === 1) shapes.push({
+      type: "rect", xref: "x", yref: "paper", x0: a.von - 0.5, x1: a.bis + 0.5, y0: 0, y1: 1,
+      fillcolor: farbe("--band"), line: { width: 0 }, layer: "below",
+    });
+    annotations.push({
+      xref: "x", yref: "paper", x: a.von - 0.3, y: 1.01, xanchor: "left", yanchor: "bottom",
+      text: a.ortsteil, textangle: -35, showarrow: false, font: { size: 10, color: farbe("--text-2") },
+    });
+  });
+  return { shapes, annotations };
+}
+
+function werteEntlangLinie(zi) {
+  const r = reihe();
+  return D.stops.map(s => r.w[s.ortsteil][zi]);
+}
+
+function zeichneLinie() {
+  const r = reihe();
+  const { shapes, annotations } = ortsteilBaender();
+  const layout = grundlayout(zustand.ansicht === "heatmap" ? 560 : 500);
+  layout.margin = { l: 64, r: 84, t: 96, b: 150 };
+  layout.xaxis = achseHaltestellen();
+  layout.shapes = shapes;
+  layout.annotations = annotations;
+  const x = D.stops.map((_, i) => i + 1);
+  const info = D.stops.map(s => [s.name, s.ortsteil]);
+  let traces;
+
+  if (zustand.ansicht === "einzeln") {
+    const y = werteEntlangLinie(zustand.zi);
+    traces = [{
+      type: "scatter", mode: "lines+markers", x, y, connectgaps: false,
+      line: { color: farbe("--series-1"), width: 2, shape: "hvh" },
+      marker: { size: 9, color: farbe("--series-1"), line: { color: farbe("--surface"), width: 2 } },
+      customdata: D.stops.map((s, i) => [s.name, s.ortsteil, zahl(y[i])]),
+      hovertemplate: "<b>%{customdata[0]}</b><br>Ortsteil %{customdata[1]}<br>%{customdata[2]}<extra></extra>",
+    }];
+    const stadt = r.w[D.stadt][zustand.zi];
+    if (vergleichbar(stadt, y)) {
+      layout.shapes.push({ type: "line", xref: "paper", yref: "y", x0: 0, x1: 1, y0: stadt, y1: stadt,
+                           line: { color: farbe("--muted"), width: 1 } });
+      layout.annotations.push({ xref: "paper", yref: "y", x: 1, y: stadt, xanchor: "left", yanchor: "middle",
+                                text: " Stadt " + zahl(stadt), showarrow: false,
+                                font: { size: 11, color: farbe("--text-2") } });
+    }
+  } else if (zustand.ansicht === "alle") {
+    const n = r.z.length;
+    traces = r.z.map((z, k) => {
+      const y = werteEntlangLinie(k), gewaehlt = k === zustand.zi;
+      return {
+        type: "scatter", mode: gewaehlt ? "lines+markers" : "lines", x, y, connectgaps: false,
+        line: { color: rampenfarbe(k, n), width: gewaehlt ? 3 : 1.5, shape: "hvh" },
+        marker: { size: 8, color: rampenfarbe(k, n), line: { color: farbe("--surface"), width: 2 } },
+        customdata: D.stops.map((s, i) => [s.name, s.ortsteil, zahl(y[i]), z]),
+        hovertemplate: "<b>%{customdata[3]}</b> · %{customdata[0]}<br>Ortsteil %{customdata[1]}<br>%{customdata[2]}<extra></extra>",
+      };
+    });
+    // Nur erste, letzte und gewählte Linie direkt beschriften
+    [...new Set([0, n - 1, zustand.zi])].forEach(k => {
+      const y = werteEntlangLinie(k)[D.stops.length - 1];
+      if (y !== null) layout.annotations.push({
+        xref: "paper", yref: "y", x: 1, y, xanchor: "left", yanchor: "middle", text: " " + r.z[k],
+        showarrow: false, font: { size: 11, color: farbe("--text-2") },
+      });
+    });
+  } else {
+    const z = r.z.map((_, k) => werteEntlangLinie(k));
+    const skala = (dunkel() ? [...RAMPE].reverse() : RAMPE).map((c, i) => [i / (RAMPE.length - 1), c]);
+    layout.plot_bgcolor = farbe("--band");
+    layout.shapes = [];
+    layout.yaxis = { type: "category", tickfont: { size: 10, color: farbe("--muted") }, showgrid: false, automargin: true, fixedrange: true };
+    traces = [{
+      type: "heatmap", x, y: r.z, z, colorscale: skala, xgap: 2, ygap: 2, hoverongaps: false,
+      customdata: z.map(zeile => zeile.map((v, i) => [info[i][0], info[i][1], zahl(v)])),
+      hovertemplate: "<b>%{y}</b> · %{customdata[0]}<br>Ortsteil %{customdata[1]}<br>%{customdata[2]}<extra></extra>",
+      colorbar: { thickness: 10, outlinewidth: 0, tickfont: { size: 10, color: farbe("--muted") }, len: 0.9, separatethousands: true, exponentformat: "none" },
+    }];
+  }
+
+  Plotly.react("diagramm-linie", traces, layout, PLOT_OPTIONEN);
+
+  el("titel-linie").textContent = `${zustand.merk} entlang der Linie ${D.linie}`;
+  // Im dunklen Design läuft die Rampe umgekehrt
+  const [frueh, aktuell] = dunkel() ? ["dunkel", "hell"] : ["hell", "dunkel"];
+  el("unter-linie").textContent = {
+    einzeln: `${indikator().titel} · ${r.z[zustand.zi]} · graue Linie: Wert der Gesamtstadt, wenn vergleichbar`,
+    alle: `${indikator().titel} · alle ${r.z.length} Zeitpunkte, ${frueh} = früh, ${aktuell} = aktuell · hervorgehoben: ${r.z[zustand.zi]}`,
+    heatmap: `${indikator().titel} · jede Zeile ein Zeitpunkt, ${aktuell} = hoher Wert · graue Felder: kein Wert`,
+  }[zustand.ansicht];
+}
+
+// ---------- Kacheln ----------
+
+function zeichneKacheln() {
+  const r = reihe();
+  const y = ortsteile.map(o => ({ ortsteil: o, wert: r.w[o][zustand.zi] })).filter(e => e.wert !== null);
+  const stadt = r.w[D.stadt][zustand.zi];
+  let kacheln;
+  if (!y.length) {
+    kacheln = [["Gipfel", "–", "kein Wert zu diesem Zeitpunkt"], ["Tal", "–", ""], ["Gefälle", "–", ""]];
+  } else {
+    const gipfel = y.reduce((a, b) => (b.wert > a.wert ? b : a));
+    const tal = y.reduce((a, b) => (b.wert < a.wert ? b : a));
+    const faktor = tal.wert > 0 ? `Faktor ${(gipfel.wert / tal.wert).toLocaleString("de-DE", { maximumFractionDigits: 1 })}` : "";
+    kacheln = [
+      ["Gipfel", zahl(gipfel.wert), gipfel.ortsteil],
+      ["Tal", zahl(tal.wert), tal.ortsteil],
+      ["Gefälle", zahl(gipfel.wert - tal.wert), faktor],
+    ];
+  }
+  kacheln.push(["Stadt Leipzig", zahl(stadt), stadt === null ? (r.h[D.stadt][zustand.zi] || "kein Wert") : r.z[zustand.zi]]);
+  el("kacheln").replaceChildren(...kacheln.map(([titel, wert, dazu]) => {
+    const k = document.createElement("div");
+    k.className = "kachel";
+    k.innerHTML = `<div class="titel"></div><div class="zahl"></div><div class="dazu"></div>`;
+    k.children[0].textContent = titel;
+    k.children[1].textContent = wert;
+    k.children[2].textContent = dazu;
+    return k;
+  }));
+}
+
+// ---------- Tabelle ----------
+
+function zeichneTabelle() {
+  const r = reihe();
+  const zeilen = D.stops.map((s, i) => {
+    const tr = document.createElement("tr");
+    const zellen = [i + 1, s.name, s.ortsteil, s.bezirk, zahl(r.w[s.ortsteil][zustand.zi]), r.h[s.ortsteil][zustand.zi] || ""];
+    zellen.forEach((inhalt, j) => {
+      const td = document.createElement("td");
+      td.textContent = inhalt;
+      if (j === 0 || j === 4) td.className = "zahl";
+      tr.append(td);
+    });
+    return tr;
+  });
+  const kopf = document.createElement("tr");
+  ["Nr.", "Haltestelle", "Ortsteil", "Stadtbezirk", `${zustand.merk} (${r.z[zustand.zi]})`, "Hinweis"].forEach((t, j) => {
+    const th = document.createElement("th");
+    th.textContent = t;
+    if (j === 0 || j === 4) th.className = "zahl";
+    kopf.append(th);
+  });
+  el("tabelle").replaceChildren(kopf, ...zeilen);
+}
+
+// ---------- Diagramm 2: Entwicklung über die Zeit ----------
+
+function zeichneZeit() {
+  const r = reihe(), ind = indikator();
+  const y = r.w[zustand.ot], stadt = r.w[D.stadt];
+  const stadtwerte = stadt.filter(v => v !== null);
+  const stadtmittel = stadtwerte.length ? stadtwerte.reduce((a, b) => a + b, 0) / stadtwerte.length : null;
+  const mitStadt = vergleichbar(stadtmittel, y);
+  const layout = grundlayout(340);
+  layout.margin = { l: 64, r: 110, t: 16, b: 40 };
+  layout.xaxis = { showgrid: false, linecolor: farbe("--axis"), tickfont: { color: farbe("--muted") }, dtick: r.j.length > 14 ? 5 : undefined, tickformat: "d" };
+  layout.showlegend = mitStadt;
+  layout.legend = { orientation: "h", x: 0, y: 1.12, font: { color: farbe("--text-2") } };
+  layout.shapes = [];
+  layout.annotations = [];
+
+  const spur = (name, werte, col, breite) => ({
+    type: "scatter", mode: "lines+markers", name, x: r.j, y: werte, connectgaps: false,
+    line: { color: col, width: breite },
+    marker: { size: 8, color: col, line: { color: farbe("--surface"), width: 2 } },
+    customdata: werte.map((v, i) => [r.z[i], zahl(v)]),
+    hovertemplate: `<b>${name}</b><br>%{customdata[0]}: %{customdata[1]}<extra></extra>`,
+  });
+  const traces = [spur(zustand.ot, y, farbe("--series-1"), 2)];
+  if (mitStadt) traces.push(spur(D.stadt, stadt, farbe("--muted"), 1.5));
+
+  // Endpunkte direkt beschriften
+  traces.forEach(t => {
+    const i = t.y.map(v => v !== null).lastIndexOf(true);
+    if (i >= 0) layout.annotations.push({
+      xref: "x", yref: "y", x: t.x[i], y: t.y[i], xanchor: "left", yanchor: "middle",
+      text: `  ${t.name} ${zahl(t.y[i])}`, showarrow: false, font: { size: 11, color: farbe("--text-2") },
+    });
+  });
+
+  // Jahre, in denen Ortsteilgrenzen angepasst wurden
+  let grenzen = [];
+  if (ind.zeitart === "jahr") {
+    grenzen = GRENZJAHRE.filter(j => j >= r.j[0] && j <= r.j[r.j.length - 1]);
+    grenzen.forEach(j => layout.shapes.push({
+      type: "line", xref: "x", yref: "paper", x0: j, x1: j, y0: 0, y1: 1, line: { color: farbe("--axis"), width: 1 }, layer: "below",
+    }));
+  }
+
+  Plotly.react("diagramm-zeit", traces, layout, PLOT_OPTIONEN);
+  el("titel-zeit").textContent = `${zustand.merk} in ${zustand.ot} über die Zeit`;
+  el("unter-zeit").textContent = mitStadt ? "im Vergleich zur Gesamtstadt" : "ohne Stadtvergleich (Größenordnung nicht vergleichbar oder kein Stadtwert)";
+  el("hinweis-zeit").textContent = grenzen.length
+    ? `Senkrechte Linien: Ortsteilgrenzen angepasst (${grenzen.join(", ")}). Werte davor beziehen sich teils auf den alten Zuschnitt.`
+    : "";
+}
+
+// ---------- Fußnoten ----------
+
+function zeichneFussnoten() {
+  const r = reihe(), ind = indikator();
+  const noten = [
+    "Jede Haltestelle zeigt den Wert des Ortsteils, in dem sie liegt. Haltestellen im selben Ortsteil haben deshalb denselben Wert, die Linie verläuft in Stufen.",
+    "Linienführung: Fahrplan der LVB, Stand Dezember 2022. Sie wird für alle Zeitpunkte verwendet.",
+  ];
+  if (ind.thema === "Bevölkerung") noten.push("Einwohner sind Personen mit Hauptwohnsitz. Nebenwohnsitze zählen nicht mit.");
+  if (ind.zeitart === "jahr") noten.push("Die Grenzen einiger Ortsteile wurden 2006, 2012 und 2014 angepasst. Werte davor beziehen sich teils auf den alten Zuschnitt. Besonders betroffen: Einwohnerdichte sowie absolute Zahlen in Heiterblick (2013).");
+  if (ind.umfrage) noten.push("Dieser Indikator beruht auf der Kommunalen Bürgerumfrage: eine Stichprobe, nur alle zwei Jahre. Pro Ortsteil antworten wenige Menschen, deshalb schwanken die Werte stark.");
+  if (ind.zeitart === "wahl") noten.push("Wahlen: „DIE LINKE“ umfasst bis 2005 die Vorgänger PDS bzw. Linkspartei.PDS. Die Quelle enthält nur ausgewählte Parteien, die Anteile ergeben deshalb nicht 100 %. Lücken bedeuten: Partei nicht angetreten.");
+  if (zustand.ind === "flaechennutzung") noten.push("Flächennutzung: 2016 wurden die Kategorien umgestellt. Die Jahre bis 2014 und ab 2016 sind nicht direkt vergleichbar.");
+
+  const gruende = {};
+  D.stops.forEach(s => {
+    const h = r.h[s.ortsteil][zustand.zi];
+    if (r.w[s.ortsteil][zustand.zi] === null) gruende[h || "kein Wert"] = (gruende[h || "kein Wert"] || 0) + 1;
+  });
+  Object.entries(gruende).forEach(([grund, n]) =>
+    noten.push(`${r.z[zustand.zi]}: ${n} von ${D.stops.length} Haltestellen ohne Wert (${grund}).`));
+
+  noten.push("Die Quelle liefert keine Einheiten mit. Ob ein Merkmal eine Anzahl, ein Anteil in Prozent oder ein Betrag ist, ergibt sich bisher nur aus dem Namen.");
+  noten.push("Quelle: Stadt Leipzig, Amt für Statistik und Wahlen (Datenlizenz Deutschland – Namensnennung 2.0). Eigene Aufbereitung.");
+  el("fussnoten").replaceChildren(...noten.map(t => Object.assign(document.createElement("li"), { textContent: t })));
+}
+
+// ---------- Steuerung ----------
+
+function alles() {
+  const r = reihe();
+  el("zeit").max = r.z.length - 1;
+  el("zeit").value = zustand.zi;
+  el("zeit-anzeige").textContent = r.z[zustand.zi];
+  zeichneKacheln();
+  zeichneLinie();
+  zeichneTabelle();
+  zeichneZeit();
+  zeichneFussnoten();
+}
+
+function fuelleMerkmale() {
+  el("merkmal").replaceChildren(...indikator().merkmale.map(m => new Option(m, m)));
+}
+
+function waehleIndikator(id, merkmal) {
+  zustand.ind = id;
+  fuelleMerkmale();
+  waehleMerkmal(merkmal && indikator().merkmale.includes(merkmal) ? merkmal : indikator().merkmale[0]);
+}
+
+function waehleMerkmal(m) {
+  zustand.merk = m;
+  el("merkmal").value = m;
+  // Neuesten Zeitpunkt wählen, zu dem es entlang der Linie Werte gibt
+  const r = reihe();
+  let zi = r.z.length - 1;
+  while (zi > 0 && ortsteile.every(o => r.w[o][zi] === null)) zi--;
+  zustand.zi = zi;
+  alles();
+}
+
+// Indikatoren nach Thema gruppieren
+const themen = [...new Set(D.indikatoren.map(i => i.thema))];
+el("indikator").replaceChildren(...themen.map(t => {
+  const g = document.createElement("optgroup");
+  g.label = t;
+  D.indikatoren.filter(i => i.thema === t).forEach(i => g.append(new Option(i.titel + (i.umfrage ? " (Umfrage)" : ""), i.indikator)));
+  return g;
+}));
+el("ortsteil").replaceChildren(...ortsteile.map(o => new Option(o, o)));
+zustand.ot = ortsteile[0];
+
+el("indikator").addEventListener("change", e => waehleIndikator(e.target.value));
+el("merkmal").addEventListener("change", e => waehleMerkmal(e.target.value));
+el("zeit").addEventListener("input", e => { zustand.zi = +e.target.value; alles(); });
+el("ortsteil").addEventListener("change", e => { zustand.ot = e.target.value; zeichneZeit(); });
+document.querySelectorAll(".ansicht button").forEach(b => b.addEventListener("click", () => {
+  zustand.ansicht = b.dataset.ansicht;
+  document.querySelectorAll(".ansicht button").forEach(x => x.setAttribute("aria-pressed", x === b));
+  zeichneLinie();
+}));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", alles);
+
+// Startzustand, optional über die Adresse: #ind=arbeitslose&merk=Frauen&ansicht=heatmap
+const start = new URLSearchParams(location.hash.slice(1));
+const startInd = D.daten[start.get("ind")] ? start.get("ind") : "sgb2";
+if (["einzeln", "alle", "heatmap"].includes(start.get("ansicht"))) {
+  zustand.ansicht = start.get("ansicht");
+  document.querySelectorAll(".ansicht button").forEach(b => b.setAttribute("aria-pressed", b.dataset.ansicht === zustand.ansicht));
+}
+el("indikator").value = startInd;
+waehleIndikator(startInd, start.get("merk") || "SGB-II-Quote");
+
+// Klick auf eine Haltestelle wählt ihren Ortsteil für das Zeitdiagramm
+el("diagramm-linie").on("plotly_click", ev => {
+  const s = D.stops[Math.round(ev.points[0].x) - 1];
+  if (!s) return;
+  zustand.ot = s.ortsteil;
+  el("ortsteil").value = s.ortsteil;
+  zeichneZeit();
+});
+</script>
+</body>
+</html>
