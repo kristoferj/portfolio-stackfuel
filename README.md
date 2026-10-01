@@ -33,6 +33,8 @@ uv sync
 | `test_diagramm.py` | Erstes Diagramm: ein Indikator entlang einer Linie |
 | `test_diagramm.html` | Ergebnis von `test_diagramm.py` |
 | `01_geodaten.ipynb` | Notebook: Ortsteile, Stadtbezirke und die Linie 8 auf der Karte |
+| `DATENAUSWAHL.md` | Übersicht aller kleinräumigen Datensätze mit getroffener Auswahl |
+| `ENTSCHEIDUNGEN.md` | Protokoll aller Überlegungen und Entscheidungen im Projekt |
 | `main.py` | Platzhalter aus `uv init`, wird nicht genutzt |
 | `data/raw/` | Rohdaten (versioniert, Stand siehe `download_protokoll.json`) |
 
@@ -50,7 +52,7 @@ uv run python download_data.py --force    # lädt alles neu
 | Ordner | Inhalt | Quelle |
 |---|---|---|
 | `geodaten/` | Grenzen der Ortsteile und Stadtbezirke (GeoJSON, UTM 33N) | [Open-Data-Portal Leipzig](https://opendata.leipzig.de/dataset/geodaten-ortsteile-leipzig) |
-| `kleinraeumig/` | Statistik je Ortsteil und Stadtbezirk. Jahreswerte: Einwohnerdichte, Einwohner, Geborene und Gestorbene, Schul- und Berufsabschlüsse, Straftaten. Je Wahltermin: Landtagswahlen (1994–2024) | [Amt für Statistik und Wahlen](https://statistik.leipzig.de) |
+| `kleinraeumig/` | Statistik je Ortsteil und Stadtbezirk, 21 Datensätze zu Bevölkerung, sozialer Lage, Bildung, Wohnen, Verkehr, Sicherheit und Wahlen (Auswahl: `DATENAUSWAHL.md`) | [Amt für Statistik und Wahlen](https://statistik.leipzig.de) |
 | `gtfs/` | Fahrplan der LVB im GTFS-Format, Stand 28.12.2022 | [LVB-Fahrplandaten](https://opendata.leipzig.de/dataset/lvb-fahrplandaten) |
 | `buergerumfrage/` | Kommunale Bürgerumfrage 2024, personen- und haushaltsgewichtet | [Open-Data-Portal Leipzig](https://opendata.leipzig.de) |
 

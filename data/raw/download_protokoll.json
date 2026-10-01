@@ -42,5 +42,65 @@
   "kleinraeumig/landtagswahlen.csv": {
     "url": "https://statistik.leipzig.de/opendata/api/kdvalues?kategorie_nr=15&rubrik_nr=4&periode=d&format=csv",
     "geladen_am": "2026-10-01T12:56:29"
+  },
+  "kleinraeumig/einwohner_alter.csv": {
+    "url": "https://statistik.leipzig.de/opendata/api/kdvalues?kategorie_nr=2&rubrik_nr=3&periode=y&format=csv",
+    "geladen_am": "2026-10-01T13:27:31"
+  },
+  "kleinraeumig/migrationshintergrund.csv": {
+    "url": "https://statistik.leipzig.de/opendata/api/kdvalues?kategorie_nr=2&rubrik_nr=5&periode=y&format=csv",
+    "geladen_am": "2026-10-01T13:27:31"
+  },
+  "kleinraeumig/haushalte.csv": {
+    "url": "https://statistik.leipzig.de/opendata/api/kdvalues?kategorie_nr=2&rubrik_nr=10&periode=y&format=csv",
+    "geladen_am": "2026-10-01T13:27:32"
+  },
+  "kleinraeumig/familien.csv": {
+    "url": "https://statistik.leipzig.de/opendata/api/kdvalues?kategorie_nr=2&rubrik_nr=11&periode=y&format=csv",
+    "geladen_am": "2026-10-01T13:27:32"
+  },
+  "kleinraeumig/wanderungen.csv": {
+    "url": "https://statistik.leipzig.de/opendata/api/kdvalues?kategorie_nr=3&rubrik_nr=3&periode=y&format=csv",
+    "geladen_am": "2026-10-01T13:27:32"
+  },
+  "kleinraeumig/sgb2.csv": {
+    "url": "https://statistik.leipzig.de/opendata/api/kdvalues?kategorie_nr=4&rubrik_nr=4&periode=y&format=csv",
+    "geladen_am": "2026-10-01T13:27:33"
+  },
+  "kleinraeumig/arbeitslose.csv": {
+    "url": "https://statistik.leipzig.de/opendata/api/kdvalues?kategorie_nr=7&rubrik_nr=3&periode=y&format=csv",
+    "geladen_am": "2026-10-01T13:27:33"
+  },
+  "kleinraeumig/nettoeinkommen.csv": {
+    "url": "https://statistik.leipzig.de/opendata/api/kdvalues?kategorie_nr=9&rubrik_nr=1&periode=y&format=csv",
+    "geladen_am": "2026-10-01T13:27:33"
+  },
+  "kleinraeumig/zufriedenheit.csv": {
+    "url": "https://statistik.leipzig.de/opendata/api/kdvalues?kategorie_nr=4&rubrik_nr=11&periode=y&format=csv",
+    "geladen_am": "2026-10-01T13:27:33"
+  },
+  "kleinraeumig/mieten.csv": {
+    "url": "https://statistik.leipzig.de/opendata/api/kdvalues?kategorie_nr=6&rubrik_nr=6&periode=y&format=csv",
+    "geladen_am": "2026-10-01T13:27:34"
+  },
+  "kleinraeumig/wohnsituation.csv": {
+    "url": "https://statistik.leipzig.de/opendata/api/kdvalues?kategorie_nr=6&rubrik_nr=7&periode=y&format=csv",
+    "geladen_am": "2026-10-01T13:27:34"
+  },
+  "kleinraeumig/kfz_bestand.csv": {
+    "url": "https://statistik.leipzig.de/opendata/api/kdvalues?kategorie_nr=10&rubrik_nr=1&periode=y&format=csv",
+    "geladen_am": "2026-10-01T13:27:34"
+  },
+  "kleinraeumig/flaechennutzung.csv": {
+    "url": "https://statistik.leipzig.de/opendata/api/kdvalues?kategorie_nr=1&rubrik_nr=1&periode=y&format=csv",
+    "geladen_am": "2026-10-01T13:27:35"
+  },
+  "kleinraeumig/bundestagswahlen.csv": {
+    "url": "https://statistik.leipzig.de/opendata/api/kdvalues?kategorie_nr=15&rubrik_nr=3&periode=d&format=csv",
+    "geladen_am": "2026-10-01T13:27:35"
+  },
+  "kleinraeumig/stadtratswahlen.csv": {
+    "url": "https://statistik.leipzig.de/opendata/api/kdvalues?kategorie_nr=15&rubrik_nr=5&periode=d&format=csv",
+    "geladen_am": "2026-10-01T13:27:35"
   }
 }

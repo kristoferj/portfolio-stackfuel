@@ -30,21 +30,43 @@ RAW_DIR = Path(__file__).resolve().parent / "data" / "raw"
 # Kleinräumige Statistik (Ortsteile + Stadtbezirke), eine CSV je Indikator.
 # Kategorie- und Rubriknummer stehen in der URL auf dem Open-Data-Portal.
 KDVALUES_URL = "https://statistik.leipzig.de/opendata/api/kdvalues"
+# Auswahl und Begründung: DATENAUSWAHL.md und ENTSCHEIDUNGEN.md Nr. 1.
+# "U" = beruht auf der Bürgerumfrage, nur alle zwei Jahre.
 INDIKATOREN = {
-    # Name der Datei:      (kategorie_nr, rubrik_nr)
-    "einwohnerdichte":     (2, 9),
-    "einwohner":           (2, 1),   # nur Hauptwohnsitze; (2, 6) wären Haupt- + Nebenwohnsitze
-    "geborene_gestorbene": (3, 1),
-    "schulabschluesse":    (5, 3),   # Umfragedaten
-    "straftaten":          (12, 1),
-    # hier weitere ergänzen, z. B. Arbeitslose oder Einwohner nach Alter
+    # Name der Datei:           (kategorie_nr, rubrik_nr)
+    # Bevölkerung
+    "einwohner":                (2, 1),   # nur Hauptwohnsitze; (2, 6) wären Haupt- + Nebenwohnsitze
+    "einwohner_alter":          (2, 3),
+    "migrationshintergrund":    (2, 5),
+    "einwohnerdichte":          (2, 9),
+    "haushalte":                (2, 10),
+    "familien":                 (2, 11),
+    "geborene_gestorbene":      (3, 1),
+    "wanderungen":              (3, 3),
+    # Soziale Lage
+    "sgb2":                     (4, 4),
+    "arbeitslose":              (7, 3),
+    "nettoeinkommen":           (9, 1),   # U
+    "zufriedenheit":            (4, 11),  # U
+    # Bildung
+    "schulabschluesse":         (5, 3),   # U
+    # Wohnen
+    "mieten":                   (6, 6),   # U
+    "wohnsituation":            (6, 7),   # U
+    # Infrastruktur und Fläche
+    "kfz_bestand":              (10, 1),
+    "flaechennutzung":          (1, 1),
+    # Sicherheit
+    "straftaten":               (12, 1),
 }
 
 # Wahlen liegen nicht je Jahr vor, sondern je Wahltermin (periode=d statt y).
 # Gleiches Schema wie oben, landen ebenfalls in kleinraeumig/.
 WAHLEN = {
-    "landtagswahlen":      (15, 4),
-    # weitere: Europa (15, 1), Bundestag (15, 3), Stadtrat (15, 5), OBM (15, 7)
+    "bundestagswahlen":         (15, 3),
+    "landtagswahlen":           (15, 4),
+    "stadtratswahlen":          (15, 5),
+    # nicht ausgewählt: Europa (15, 1), Oberbürgermeister (15, 7)
 }
 
 # Einzelne Dateien mit fester URL
