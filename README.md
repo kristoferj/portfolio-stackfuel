@@ -6,13 +6,35 @@ Inspiriert von [„M29 – Berlins Buslinie der großen Unterschiede"](https://i
 
 > Status: in Arbeit. Aktuell enthält das Projekt die Datenbeschaffung und ein erstes Testdiagramm.
 
+## Schnellstart
+
+```bash
+uv sync                                  # Umgebung einrichten
+uv run python test_diagramm.py           # Testdiagramm erzeugen
+```
+
+Die Rohdaten liegen bereits im Repository unter `data/raw/`. `download_data.py` brauchst du nur, um sie zu aktualisieren oder neue Quellen hinzuzufügen.
+
 ## Installation
+
+Voraussetzungen: Python 3.14 und [uv](https://docs.astral.sh/uv/).
 
 ```bash
 uv sync
 ```
 
-Benötigt werden `requests`, `pandas`, `geopandas` und `plotly`.
+`uv sync` installiert alle Abhängigkeiten aus `pyproject.toml` (fest gepinnt in `uv.lock`). Die Skripte brauchen `requests`, `pandas`, `geopandas` und `plotly`. Für die Analyse im Notebook kommen `ipykernel`, `matplotlib`, `seaborn` und `scikit-learn` dazu.
+
+## Projektstruktur
+
+| Datei / Ordner | Zweck |
+|---|---|
+| `download_data.py` | Lädt alle Rohdaten nach `data/raw/` |
+| `test_diagramm.py` | Erstes Diagramm: ein Indikator entlang einer Linie |
+| `test_diagramm.html` | Ergebnis von `test_diagramm.py` |
+| `test.ipynb` | Notebook zum Erkunden der Daten |
+| `main.py` | Platzhalter aus `uv init`, wird nicht genutzt |
+| `data/raw/` | Rohdaten (versioniert, Stand siehe `download_protokoll.json`) |
 
 ## Datenbeschaffung
 
@@ -39,6 +61,8 @@ Alle Daten stehen unter der [Datenlizenz Deutschland – Namensnennung 2.0](http
 - Vorhandene Dateien werden übersprungen. `--force` lädt alles neu.
 - Schlägt eine Quelle fehl, laufen die anderen weiter. Am Ende steht, was nicht geklappt hat.
 - `data/raw/download_protokoll.json` hält fest, woher jede Datei stammt und wann sie geladen wurde.
+- Halbe Downloads landen zuerst in einer `.part`-Datei und bekommen erst am Ende den richtigen Namen.
+- Das Skript entfernt die Umgebungsvariable `SSLKEYLOGFILE` für seine eigene Laufzeit. Ist sie gesetzt, scheitern HTTPS-Verbindungen sonst mit `PermissionError`.
 
 ### Weitere Daten ergänzen
 

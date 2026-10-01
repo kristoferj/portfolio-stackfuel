@@ -1,7 +1,7 @@
 [project]
-name = "stackfuel-porfolio-project"
+name = "gipfel-und-talfahrt"
 version = "0.1.0"
-description = "Add your description here"
+description = "Gipfel und Talfahrt der Linie 8: Sozialstruktur Leipzigs entlang einer Straßenbahnlinie"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [

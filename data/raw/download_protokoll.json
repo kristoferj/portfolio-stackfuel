@@ -1,0 +1,42 @@
+{
+  "geodaten/ortsteile.geojson": {
+    "url": "https://static.leipzig.de/fileadmin/mediendatenbank/leipzig-de/Stadt/02.1_Dez1_Allgemeine_Verwaltung/12_Statistik_und_Wahlen/Geodaten/Ortsteile_Leipzig_UTM33N.json",
+    "geladen_am": "2026-09-29T21:34:39"
+  },
+  "geodaten/stadtbezirke.geojson": {
+    "url": "https://static.leipzig.de/fileadmin/mediendatenbank/leipzig-de/Stadt/02.1_Dez1_Allgemeine_Verwaltung/12_Statistik_und_Wahlen/Geodaten/Stadtbezirke_Leipzig_UTM33N.json",
+    "geladen_am": "2026-09-29T21:34:40"
+  },
+  "gtfs/lvb_gtfs.zip": {
+    "url": "https://opendata.leipzig.de/dataset/8803f612-2ce1-4643-82d1-213434889200/resource/b38955c4-431c-4e8b-a4ef-9964a3a2c95d/download/gtfsmdvlvb.zip",
+    "geladen_am": "2026-09-29T21:34:41"
+  },
+  "kleinraeumig/einwohnerdichte.csv": {
+    "url": "https://statistik.leipzig.de/opendata/api/kdvalues?kategorie_nr=2&rubrik_nr=9&periode=y&format=csv",
+    "geladen_am": "2026-09-29T21:34:45"
+  },
+  "kleinraeumig/einwohner.csv": {
+    "url": "https://statistik.leipzig.de/opendata/api/kdvalues?kategorie_nr=2&rubrik_nr=6&periode=y&format=csv",
+    "geladen_am": "2026-09-29T21:34:48"
+  },
+  "kleinraeumig/geborene_gestorbene.csv": {
+    "url": "https://statistik.leipzig.de/opendata/api/kdvalues?kategorie_nr=3&rubrik_nr=1&periode=y&format=csv",
+    "geladen_am": "2026-09-29T21:34:53"
+  },
+  "kleinraeumig/schulabschluesse.csv": {
+    "url": "https://statistik.leipzig.de/opendata/api/kdvalues?kategorie_nr=5&rubrik_nr=3&periode=y&format=csv",
+    "geladen_am": "2026-09-29T21:34:58"
+  },
+  "kleinraeumig/straftaten.csv": {
+    "url": "https://statistik.leipzig.de/opendata/api/kdvalues?kategorie_nr=12&rubrik_nr=1&periode=y&format=csv",
+    "geladen_am": "2026-09-29T21:35:02"
+  },
+  "buergerumfrage/buergerumfrage_2024_person.csv": {
+    "url": "https://opendata.leipzig.de/dataset/dd7ccaeb-c50a-4250-8895-6c64677ad787/resource/c5617e4c-4f15-464c-9b19-e8f46922b5b6/download/ergebnisse_kbu_2024_person.csv",
+    "geladen_am": "2026-09-29T21:35:07"
+  },
+  "buergerumfrage/buergerumfrage_2024_haushalt.csv": {
+    "url": "https://opendata.leipzig.de/dataset/03f75b80-e11c-4ff9-bf4f-5e5d6ce8cbcb/resource/84889696-3377-4c8d-978d-353f5f174bb7/download/ergebnisse_kbu_2024_haushalt.csv",
+    "geladen_am": "2026-09-29T21:35:09"
+  }
+}
