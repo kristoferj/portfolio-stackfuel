@@ -8,3 +8,12 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Persönliche Arbeitsnotizen
+DATENAUSWAHL.md
+ENTSCHEIDUNGEN.md
+
+# Rohdaten: werden mit download_data.py geladen und nicht versioniert.
+# Das Protokoll bleibt drin, damit nachvollziehbar ist, was wann geladen wurde.
+data/raw/*
+!data/raw/download_protokoll.json

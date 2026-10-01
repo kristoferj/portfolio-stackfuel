@@ -30,7 +30,7 @@ RAW_DIR = Path(__file__).resolve().parent / "data" / "raw"
 # Kleinräumige Statistik (Ortsteile + Stadtbezirke), eine CSV je Indikator.
 # Kategorie- und Rubriknummer stehen in der URL auf dem Open-Data-Portal.
 KDVALUES_URL = "https://statistik.leipzig.de/opendata/api/kdvalues"
-# Auswahl und Begründung: DATENAUSWAHL.md und ENTSCHEIDUNGEN.md Nr. 1.
+# Ausgewählt aus allen kleinräumigen Datensätzen des Open-Data-Portals.
 # "U" = beruht auf der Bürgerumfrage, nur alle zwei Jahre.
 INDIKATOREN = {
     # Name der Datei:           (kategorie_nr, rubrik_nr)
