@@ -5,8 +5,10 @@ description = "Gipfel und Talfahrt der Linie 8: Sozialstruktur Leipzigs entlang 
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
+    "folium>=0.20.0",
     "geopandas>=1.2.0",
     "ipykernel>=7.3.0",
+    "mapclassify>=2.11.0",
     "matplotlib>=3.11.2",
     "pandas>=3.0.6",
     "plotly>=7.1.0",

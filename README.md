@@ -23,7 +23,7 @@ Voraussetzungen: Python 3.14 und [uv](https://docs.astral.sh/uv/).
 uv sync
 ```
 
-`uv sync` installiert alle Abhängigkeiten aus `pyproject.toml` (fest gepinnt in `uv.lock`). Die Skripte brauchen `requests`, `pandas`, `geopandas` und `plotly`. Für die Analyse im Notebook kommen `ipykernel`, `matplotlib`, `seaborn` und `scikit-learn` dazu.
+`uv sync` installiert alle Abhängigkeiten aus `pyproject.toml` (fest gepinnt in `uv.lock`). Die Skripte brauchen `requests`, `pandas`, `geopandas` und `plotly`. Für die Notebooks kommen `ipykernel`, `matplotlib`, `folium`, `mapclassify`, `seaborn` und `scikit-learn` dazu.
 
 ## Projektstruktur
 
@@ -32,7 +32,7 @@ uv sync
 | `download_data.py` | Lädt alle Rohdaten nach `data/raw/` |
 | `test_diagramm.py` | Erstes Diagramm: ein Indikator entlang einer Linie |
 | `test_diagramm.html` | Ergebnis von `test_diagramm.py` |
-| `test.ipynb` | Notebook zum Erkunden der Daten |
+| `01_geodaten.ipynb` | Notebook: Ortsteile, Stadtbezirke und die Linie 8 auf der Karte |
 | `main.py` | Platzhalter aus `uv init`, wird nicht genutzt |
 | `data/raw/` | Rohdaten (versioniert, Stand siehe `download_protokoll.json`) |
 
