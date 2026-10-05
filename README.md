@@ -12,6 +12,7 @@ Inspiriert von [„M29 – Berlins Buslinie der großen Unterschiede"](https://i
 uv sync                                  # Umgebung einrichten
 uv run python download_data.py           # Rohdaten laden (einmalig)
 # danach 02_aufbereitung.ipynb ausführen   # Daten aufbereiten
+uv run python satellit_daten.py          # Satellitendaten auswerten (dauert einige Minuten)
 uv run python test_diagramm.py           # Testdiagramm erzeugen
 ```
 
@@ -32,6 +33,7 @@ uv sync
 | Datei / Ordner | Zweck |
 |---|---|
 | `download_data.py` | Lädt alle Rohdaten nach `data/raw/` |
+| `satellit_daten.py` | Wertet Landsat-Satellitendaten aus: Oberflächentemperatur und Vegetation je Ortsteil, Sommer ab 2013 |
 | `test_diagramm.py` | Erstes Diagramm: ein Indikator entlang einer Linie |
 | `test_diagramm.html` | Ergebnis von `test_diagramm.py` |
 | `test_dashboard.py` | Test-Dashboard: alle aufbereiteten Indikatoren entlang der Linie 8, mit Zeitauswahl |
@@ -59,6 +61,7 @@ uv run python download_data.py --force    # lädt alles neu
 | `kleinraeumig/` | Statistik je Ortsteil und Stadtbezirk, 21 Datensätze zu Bevölkerung, sozialer Lage, Bildung, Wohnen, Verkehr, Sicherheit und Wahlen | [Amt für Statistik und Wahlen](https://statistik.leipzig.de) |
 | `gtfs/` | Fahrplan der LVB im GTFS-Format, Stand 28.12.2022 | [LVB-Fahrplandaten](https://opendata.leipzig.de/dataset/lvb-fahrplandaten) |
 | `buergerumfrage/` | Kommunale Bürgerumfrage 2024, personen- und haushaltsgewichtet | [Open-Data-Portal Leipzig](https://opendata.leipzig.de) |
+| `satellit/` | Zwischenergebnis der Satellitenauswertung je Aufnahme (`satellit_daten.py`) | [Landsat 8/9, USGS](https://www.usgs.gov/landsat-missions), über den [Microsoft Planetary Computer](https://planetarycomputer.microsoft.com/dataset/landsat-c2-l2) |
 
 Alle Daten stehen unter der [Datenlizenz Deutschland – Namensnennung 2.0](https://www.govdata.de/dl-de/by-2-0). Quelle: Stadt Leipzig.
 

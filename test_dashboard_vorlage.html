@@ -190,7 +190,14 @@ const D = /*DATEN*/null;
 // Blaue Ein-Farb-Rampe, hell nach dunkel (Stufen 100 bis 700)
 const RAMPE = ["#cde2fb", "#b7d3f6", "#9ec5f4", "#86b6ef", "#6da7ec", "#5598e7", "#3987e5",
                "#2a78d6", "#256abf", "#1c5cab", "#184f95", "#104281", "#0d366b"];
-const GRENZJAHRE = [2006, 2012, 2014];   // Ortsteilgrenzen angepasst
+const GRENZJAHRE = [2006, 2012, 2014];
+// Divergierende Skala für Werte mit Vorzeichen (Abweichungen, Salden): kühl/negativ blau, warm/positiv rot, 0 neutral grau
+const DIVERGIEREND = {
+  blau: ["#104281", "#2a78d6", "#6da7ec", "#b7d3f6"],
+  rot: ["#f6c1c0", "#ec8584", "#e34948", "#a8282a"],
+  mitte: { hell: "#f0efec", dunkel: "#383835" },
+};
+const divergierend = merkmal => /Abweichung|Saldo|saldo/.test(merkmal);   // Ortsteilgrenzen angepasst
 const SCHRIFT = 'system-ui, -apple-system, "Segoe UI", sans-serif';
 
 const el = id => document.getElementById(id);
@@ -338,12 +345,20 @@ function zeichneLinie() {
     });
   } else {
     const z = r.z.map((_, k) => werteEntlangLinie(k));
-    const skala = (dunkel() ? [...RAMPE].reverse() : RAMPE).map((c, i) => [i / (RAMPE.length - 1), c]);
+    let skala, extra = {};
+    if (divergierend(zustand.merk)) {
+      const stufen = [...DIVERGIEREND.blau, dunkel() ? DIVERGIEREND.mitte.dunkel : DIVERGIEREND.mitte.hell, ...DIVERGIEREND.rot];
+      skala = stufen.map((c, i) => [i / (stufen.length - 1), c]);
+      const max = Math.max(...z.flat().filter(v => v !== null).map(Math.abs));
+      extra = { zmid: 0, zmin: -max, zmax: max };   // 0 liegt genau in der neutralen Mitte
+    } else {
+      skala = (dunkel() ? [...RAMPE].reverse() : RAMPE).map((c, i) => [i / (RAMPE.length - 1), c]);
+    }
     layout.plot_bgcolor = farbe("--band");
     layout.shapes = [];
     layout.yaxis = { type: "category", tickfont: { size: 10, color: farbe("--muted") }, showgrid: false, automargin: true, fixedrange: true };
     traces = [{
-      type: "heatmap", x, y: r.z, z, colorscale: skala, xgap: 2, ygap: 2, hoverongaps: false,
+      type: "heatmap", x, y: r.z, z, colorscale: skala, ...extra, xgap: 2, ygap: 2, hoverongaps: false,
       customdata: z.map(zeile => zeile.map((v, i) => [info[i][0], info[i][1], zahl(v)])),
       hovertemplate: "<b>%{y}</b> · %{customdata[0]}<br>Ortsteil %{customdata[1]}<br>%{customdata[2]}<extra></extra>",
       colorbar: { thickness: 10, outlinewidth: 0, tickfont: { size: 10, color: farbe("--muted") }, len: 0.9, separatethousands: true, exponentformat: "none" },
@@ -358,7 +373,9 @@ function zeichneLinie() {
   el("unter-linie").textContent = {
     einzeln: `${indikator().titel} · ${r.z[zustand.zi]} · graue Linie: Wert der Gesamtstadt, wenn vergleichbar`,
     alle: `${indikator().titel} · alle ${r.z.length} Zeitpunkte, ${frueh} = früh, ${aktuell} = aktuell · hervorgehoben: ${r.z[zustand.zi]}`,
-    heatmap: `${indikator().titel} · jede Zeile ein Zeitpunkt, ${aktuell} = hoher Wert · graue Felder: kein Wert`,
+    heatmap: divergierend(zustand.merk)
+      ? `${indikator().titel} · jede Zeile ein Zeitpunkt, rot = über dem Stadtmittel bzw. positiv, blau = darunter bzw. negativ`
+      : `${indikator().titel} · jede Zeile ein Zeitpunkt, ${aktuell} = hoher Wert · graue Felder: kein Wert`,
   }[zustand.ansicht];
 }
 
@@ -455,7 +472,7 @@ function zeichneZeit() {
 
   // Jahre, in denen Ortsteilgrenzen angepasst wurden
   let grenzen = [];
-  if (ind.zeitart === "jahr") {
+  if (ind.zeitart === "jahr" && ind.thema !== "Umwelt") {
     grenzen = GRENZJAHRE.filter(j => j >= r.j[0] && j <= r.j[r.j.length - 1]);
     grenzen.forEach(j => layout.shapes.push({
       type: "line", xref: "x", yref: "paper", x0: j, x1: j, y0: 0, y1: 1, line: { color: farbe("--axis"), width: 1 }, layer: "below",
@@ -479,9 +496,17 @@ function zeichneFussnoten() {
     "Linienführung: Fahrplan der LVB, Stand Dezember 2022. Sie wird für alle Zeitpunkte verwendet.",
   ];
   if (ind.thema === "Bevölkerung") noten.push("Einwohner sind Personen mit Hauptwohnsitz. Nebenwohnsitze zählen nicht mit.");
-  if (ind.zeitart === "jahr") noten.push("Die Grenzen einiger Ortsteile wurden 2006, 2012 und 2014 angepasst. Werte davor beziehen sich teils auf den alten Zuschnitt. Besonders betroffen: Einwohnerdichte sowie absolute Zahlen in Heiterblick (2013).");
+  if (ind.zeitart === "jahr" && ind.thema !== "Umwelt") noten.push("Die Grenzen einiger Ortsteile wurden 2006, 2012 und 2014 angepasst. Werte davor beziehen sich teils auf den alten Zuschnitt. Besonders betroffen: Einwohnerdichte sowie absolute Zahlen in Heiterblick (2013).");
   if (ind.umfrage) noten.push("Dieser Indikator beruht auf der Kommunalen Bürgerumfrage: eine Stichprobe, nur alle zwei Jahre. Pro Ortsteil antworten wenige Menschen, deshalb schwanken die Werte stark.");
   if (ind.zeitart === "wahl") noten.push("Wahlen: „DIE LINKE“ umfasst bis 2005 die Vorgänger PDS bzw. Linkspartei.PDS. Die Quelle enthält nur ausgewählte Parteien, die Anteile ergeben deshalb nicht 100 %. Lücken bedeuten: Partei nicht angetreten.");
+  if (ind.thema === "Umwelt") {
+    noten.push("Satellitendaten: Landsat 8/9 (USGS), Sommer Juni bis August, über den Microsoft Planetary Computer. Je Jahr der Mittelwert aller wolkenfreien Aufnahmen (1 bis 5 pro Sommer). 2013 und 2021 gab es keine verwendbare Aufnahme. Berechnet auf die heutigen Ortsteilgrenzen, Grenzänderungen spielen hier keine Rolle.");
+    if (zustand.ind === "oberflaechentemperatur") {
+      noten.push("Gemessen wird die Oberflächentemperatur (Dächer, Asphalt, Wiesen) am Vormittag, nicht die Lufttemperatur. Die Oberfläche wird an Hitzetagen deutlich heißer als die Luft.");
+      noten.push("Die absolute Temperatur hängt vom Wetter am Aufnahmetag ab. Für Vergleiche zwischen Jahren eignet sich die Abweichung vom Stadtmittel besser.");
+      noten.push("Abgeerntete, trockene Felder werden besonders heiß. Ortsteile mit viel Landwirtschaft am Stadtrand erscheinen deshalb oft heißer als die Innenstadt.");
+    }
+  }
   if (zustand.ind === "flaechennutzung") noten.push("Flächennutzung: 2016 wurden die Kategorien umgestellt. Die Jahre bis 2014 und ab 2016 sind nicht direkt vergleichbar.");
 
   const gruende = {};
@@ -492,7 +517,7 @@ function zeichneFussnoten() {
   Object.entries(gruende).forEach(([grund, n]) =>
     noten.push(`${r.z[zustand.zi]}: ${n} von ${D.stops.length} Haltestellen ohne Wert (${grund}).`));
 
-  noten.push("Die Quelle liefert keine Einheiten mit. Ob ein Merkmal eine Anzahl, ein Anteil in Prozent oder ein Betrag ist, ergibt sich bisher nur aus dem Namen.");
+  if (ind.thema !== "Umwelt") noten.push("Die Quelle liefert keine Einheiten mit. Ob ein Merkmal eine Anzahl, ein Anteil in Prozent oder ein Betrag ist, ergibt sich bisher nur aus dem Namen.");
   noten.push("Quelle: Stadt Leipzig, Amt für Statistik und Wahlen (Datenlizenz Deutschland – Namensnennung 2.0). Eigene Aufbereitung.");
   el("fussnoten").replaceChildren(...noten.map(t => Object.assign(document.createElement("li"), { textContent: t })));
 }

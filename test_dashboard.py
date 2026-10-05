@@ -88,12 +88,13 @@ def strecke_bestimmen() -> pd.DataFrame:
 # ============================================================
 
 def daten_zusammenstellen(strecke: pd.DataFrame) -> dict:
-    daten = pd.read_csv(
-        PROCESSED / "kleinraeumig_lang.csv",
-        dtype={"nummer": str, "zeitpunkt": str},
-        parse_dates=["datum"],
-    )
-    indikatoren = pd.read_csv(PROCESSED / "indikatoren.csv")
+    # Kleinräumige Statistik, dazu die Satellitendaten, falls satellit_daten.py gelaufen ist
+    teile = [("kleinraeumig_lang.csv", "indikatoren.csv"), ("satellit_lang.csv", "indikatoren_satellit.csv")]
+    teile = [(d, i) for d, i in teile if (PROCESSED / d).exists()]
+    daten = pd.concat([
+        pd.read_csv(PROCESSED / d, dtype={"nummer": str, "zeitpunkt": str}, parse_dates=["datum"]) for d, _ in teile
+    ], ignore_index=True)
+    indikatoren = pd.concat([pd.read_csv(PROCESSED / i) for _, i in teile], ignore_index=True)
 
     gebiete = list(dict.fromkeys(strecke["ortsteil"])) + [STADT]
     daten = daten[daten["gebiet"].isin(gebiete)]
