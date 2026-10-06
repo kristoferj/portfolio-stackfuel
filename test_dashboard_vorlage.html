@@ -43,7 +43,7 @@
     color: var(--text-1);
     font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
   }
-  main { max-width: 1280px; margin: 0 auto; padding: 24px 16px 48px; }
+  main { max-width: 1400px; margin: 0 auto; padding: 24px 16px 48px; }
   h1 { font-size: 26px; line-height: 1.2; margin: 0 0 4px; }
   h2 { font-size: 17px; margin: 0; }
   h3 { font-size: 15px; margin: 0; }
@@ -54,29 +54,27 @@
     border: 1px solid var(--border); border-radius: 999px;
     color: var(--text-2); font-size: 12px;
   }
+  button, select, input { font: inherit; color: inherit; }
 
-  .filter {
-    display: flex; flex-wrap: wrap; gap: 16px; align-items: end;
-    margin: 24px 0 12px;
+  /* Auswahl der Kennzahlen: Schalter nach Thema */
+  .waehler { margin: 20px 0 12px; display: grid; gap: 8px; }
+  .waehler-kopf { font-size: 13px; color: var(--text-2); }
+  .themen { display: flex; flex-wrap: wrap; gap: 6px 18px; }
+  .thema { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .thema > span { font-size: 12px; color: var(--muted); margin-right: 2px; }
+  .schalter {
+    padding: 4px 12px; border: 1px solid var(--axis); border-radius: 999px;
+    background: var(--surface); cursor: pointer; font-size: 13px;
   }
+  .schalter[aria-pressed="true"] { background: var(--accent-wash); border-color: var(--series-1); font-weight: 600; }
+  .schalter:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .filter { display: flex; flex-wrap: wrap; gap: 16px; align-items: end; margin-bottom: 16px; }
   .feld { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
   .feld > span, .feld > label { font-size: 12px; color: var(--text-2); }
-  select, button, input { font: inherit; color: inherit; }
-  select {
-    padding: 7px 10px; border: 1px solid var(--axis); border-radius: 8px;
-    background: var(--surface); max-width: 100%;
-  }
-  #merkmal { min-width: 240px; }
-  .knopf {
-    padding: 7px 14px; border: 1px solid var(--axis); border-radius: 8px;
-    background: var(--accent-wash); font-weight: 600; cursor: pointer;
-  }
-  .knopf:disabled { opacity: 0.5; cursor: not-allowed; }
+  select { padding: 7px 10px; border: 1px solid var(--axis); border-radius: 8px; background: var(--surface); max-width: 100%; }
   .ansicht { display: flex; border: 1px solid var(--axis); border-radius: 8px; overflow: hidden; }
-  .ansicht button {
-    padding: 7px 12px; border: 0; background: var(--surface); cursor: pointer;
-    border-left: 1px solid var(--axis);
-  }
+  .ansicht button { padding: 7px 12px; border: 0; background: var(--surface); cursor: pointer; border-left: 1px solid var(--axis); }
   .ansicht button:first-child { border-left: 0; }
   .ansicht button[aria-pressed="true"] { background: var(--accent-wash); font-weight: 600; }
   .zeit { flex: 1 1 260px; }
@@ -84,36 +82,24 @@
   .zeit input { flex: 1; min-width: 120px; accent-color: var(--series-1); }
   .zeit output { font-weight: 600; font-variant-numeric: tabular-nums; min-width: 5ch; text-align: right; }
 
-  .auswahl { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 16px; }
-  .auswahl .titel { font-size: 12px; color: var(--text-2); margin-right: 4px; }
-  .chip {
-    display: inline-flex; align-items: center; gap: 6px; max-width: 100%;
-    padding: 4px 6px 4px 12px; border: 1px solid var(--axis); border-radius: 999px;
-    background: var(--surface); font-size: 13px;
-  }
-  .chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .chip button {
-    border: 0; background: none; cursor: pointer; color: var(--text-2);
-    width: 24px; height: 24px; border-radius: 50%; line-height: 1; font-size: 16px;
-  }
-  .chip button:hover { background: var(--band); color: var(--text-1); }
-  .auswahl .grenze { font-size: 12px; color: var(--muted); }
-
   .karte {
     background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
     padding: 16px; margin-bottom: 16px;
   }
-  .karte > header { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-between; align-items: end; margin-bottom: 8px; }
+  .karte > header { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-between; align-items: end; margin-bottom: 12px; }
   .karte > header p { color: var(--text-2); font-size: 13px; }
-  .panel { padding-top: 12px; border-top: 1px solid var(--grid); margin-top: 8px; }
-  .panel:first-of-type { border-top: 0; margin-top: 0; }
-  .panel-kopf { display: flex; flex-wrap: wrap; gap: 4px 16px; justify-content: space-between; align-items: baseline; }
-  .panel-kopf .zeitpunkt { color: var(--text-2); font-size: 13px; }
-  .kennzahlen { display: flex; flex-wrap: wrap; gap: 4px 20px; font-size: 13px; color: var(--text-2); margin-top: 2px; }
+
+  /* Panels nebeneinander, auf schmalen Bildschirmen untereinander */
+  .panels { display: grid; grid-template-columns: repeat(var(--n, 1), minmax(0, 1fr)); gap: 0 16px; }
+  .panel { min-width: 0; }
+  .panel-kopf { min-height: 92px; }
+  .panel-kopf .einheit { color: var(--text-2); font-size: 13px; }
+  .kennzahlen { display: flex; flex-wrap: wrap; gap: 2px 14px; font-size: 13px; color: var(--text-2); margin-top: 4px; }
   .kennzahlen b { color: var(--text-1); font-weight: 600; }
   .diagramm { width: 100%; }
   .unterzeile { color: var(--text-2); font-size: 13px; margin-top: 4px; }
   .leer { color: var(--text-2); font-size: 14px; padding: 24px 0; }
+  @media (max-width: 900px) { .panels { grid-template-columns: minmax(0, 1fr); } .panel-kopf { min-height: 0; } }
 
   details { margin-top: 8px; }
   summary { cursor: pointer; color: var(--text-2); font-size: 13px; }
@@ -127,28 +113,21 @@
   .fussnoten h2 { color: var(--text-1); margin-bottom: 8px; }
   .fussnoten ul { margin: 0; padding-left: 18px; }
   .fussnoten li { margin-bottom: 4px; max-width: 95ch; }
-
-  @media (max-width: 760px) {
-    h1 { font-size: 22px; }
-  }
+  @media (max-width: 760px) { h1 { font-size: 22px; } }
 </style>
 </head>
 <body>
 <main>
   <span class="test-hinweis">Test-Dashboard · prüft, wie gut die aufbereiteten Daten passen</span>
   <h1>Gipfel und Talfahrt der Linie 8</h1>
-  <p class="lead">Von Grünau-Nord nach Paunsdorf Nord: Wie verändert sich Leipzig von Haltestelle zu Haltestelle? Wähle bis zu vier Indikatoren und ein Jahr.</p>
+  <p class="lead">Von Grünau-Nord nach Paunsdorf Nord: Wie verändert sich Leipzig von Haltestelle zu Haltestelle? Wähle bis zu drei Kennzahlen und ein Jahr.</p>
+
+  <div class="waehler">
+    <div class="waehler-kopf" id="waehler-kopf"></div>
+    <div class="themen" id="themen"></div>
+  </div>
 
   <div class="filter">
-    <div class="feld">
-      <label for="indikator">Indikator</label>
-      <select id="indikator"></select>
-    </div>
-    <div class="feld">
-      <label for="merkmal">Merkmal</label>
-      <select id="merkmal"></select>
-    </div>
-    <button type="button" class="knopf" id="hinzufuegen">+ Hinzufügen</button>
     <div class="feld">
       <span id="ansicht-label">Ansicht</span>
       <div class="ansicht" role="group" aria-labelledby="ansicht-label">
@@ -165,8 +144,6 @@
     </div>
   </div>
 
-  <div class="auswahl" id="auswahl" aria-live="polite"></div>
-
   <section class="karte">
     <header>
       <div>
@@ -174,7 +151,7 @@
         <p id="unter-linie"></p>
       </div>
     </header>
-    <div id="panels-linie"></div>
+    <div class="panels" id="panels-linie"></div>
     <details>
       <summary>Werte als Tabelle</summary>
       <div class="tabelle-rahmen"><table id="tabelle"></table></div>
@@ -192,7 +169,7 @@
         <select id="ortsteil"></select>
       </div>
     </header>
-    <div id="panels-zeit"></div>
+    <div class="panels" id="panels-zeit"></div>
   </section>
 
   <section class="karte fussnoten">
@@ -204,26 +181,40 @@
 <script>
 const D = /*DATEN*/null;
 
-const MAX_AUSWAHL = 4;
+const MAX_AUSWAHL = 3;
 // Blaue Ein-Farb-Rampe, hell nach dunkel (Stufen 100 bis 700)
 const RAMPE = ["#cde2fb", "#b7d3f6", "#9ec5f4", "#86b6ef", "#6da7ec", "#5598e7", "#3987e5",
                "#2a78d6", "#256abf", "#1c5cab", "#184f95", "#104281", "#0d366b"];
-// Divergierende Skala für Werte mit Vorzeichen (Abweichungen, Salden): negativ blau, positiv rot, 0 neutral grau
+// Divergierende Skala für Werte mit Vorzeichen: negativ blau, positiv rot, 0 neutral grau
 const DIVERGIEREND = {
   blau: ["#104281", "#2a78d6", "#6da7ec", "#b7d3f6"],
   rot: ["#f6c1c0", "#ec8584", "#e34948", "#a8282a"],
   mitte: { hell: "#f0efec", dunkel: "#383835" },
 };
+// Parteien in ihren üblichen Farben, weil Leser sie so erwarten. CDU im dunklen Design aufgehellt.
+const PARTEIFARBEN = {
+  "CDU": { hell: "#2b2b2b", dunkel: "#b5b5b5" },
+  "SPD": "#e3000f",
+  "DIE LINKE": "#be3075",
+  "GRÜNE": "#1aa037",
+  "FDP": "#ffcc00",
+  "AfD": "#009ee0",
+  "BSW": "#7d254f",
+  "Sonstige": { hell: "#d4d3cc", dunkel: "#55554f" },
+};
 const GRENZJAHRE = [2006, 2012, 2014];   // Ortsteilgrenzen angepasst
 const SCHRIFT = 'system-ui, -apple-system, "Segoe UI", sans-serif';
 const PLOT_OPTIONEN = { responsive: true, displayModeBar: false };
+const ZEILE = 22;                        // Pixel je Haltestelle
+const RAND = { t: 84, b: 36, links: 190, rechts: 150, innen: 10 };
 
 const el = id => document.getElementById(id);
 const dunkel = () => matchMedia("(prefers-color-scheme: dark)").matches;
 const farbe = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-const divergierend = merkmal => /Abweichung|[Ss]aldo/.test(merkmal);
+const parteifarbe = p => typeof PARTEIFARBEN[p] === "string" ? PARTEIFARBEN[p] : PARTEIFARBEN[p][dunkel() ? "dunkel" : "hell"];
+const divergierend = k => k.id === "hitze";
+const amtlicheJahresdaten = k => k.zeitart === "jahr" && k.thema !== "Umwelt";
 
-// auswahl: Liste von { ind, merk }; jahr: gewähltes Jahr
 const zustand = { auswahl: [], jahr: null, ansicht: "einzeln", ot: null };
 
 // ---------- Hilfsfunktionen ----------
@@ -235,10 +226,10 @@ function zahl(v) {
   return v.toLocaleString("de-DE", { maximumFractionDigits: stellen });
 }
 
-const reihe = a => D.daten[a.ind][a.merk];
-const indikator = id => D.indikatoren.find(i => i.indikator === id);
+const kennzahl = id => D.kennzahlen.find(k => k.id === id);
+const reihe = k => D.daten[k.id];
 const ortsteile = [...new Set(D.stops.map(s => s.ortsteil))];
-const schluessel = a => `${a.ind}~${a.merk}`;
+const yStops = D.stops.map((_, i) => i + 1);
 
 // Zusammenhängende Abschnitte der Linie im selben Ortsteil
 const abschnitte = [];
@@ -248,25 +239,28 @@ D.stops.forEach((s, i) => {
   else abschnitte.push({ ortsteil: s.ortsteil, von: i + 1, bis: i + 1 });
 });
 
-// Alle Jahre, zu denen mindestens ein gewählter Indikator Werte hat
+// Wert eines Gebiets zum Zeitpunkt k (bei Wahlen: Anteil einer Partei)
+const wert = (k, gebiet, i, partei) => k.typ === "parteien" ? reihe(k).w[partei][gebiet][i] : reihe(k).w[gebiet][i];
+const hatWert = (k, gebiet, i) => k.typ === "parteien"
+  ? reihe(k).parteien.some(p => p !== "Sonstige" && reihe(k).w[p][gebiet][i] !== null)
+  : reihe(k).w[gebiet][i] !== null;
+
 function jahre() {
   const j = new Set();
-  zustand.auswahl.forEach(a => reihe(a).j.forEach(x => j.add(x)));
+  zustand.auswahl.forEach(k => reihe(k).j.forEach(x => j.add(x)));
   return [...j].sort((a, b) => a - b);
 }
 
 // Neuester Zeitpunkt bis zum gewählten Jahr, an dem es entlang der Linie Werte gibt
-function zeitIndex(a) {
-  const r = reihe(a);
-  for (let k = r.j.length - 1; k >= 0; k--) {
-    if (r.j[k] <= zustand.jahr && ortsteile.some(o => r.w[o][k] !== null)) return k;
+function zeitIndex(k) {
+  const r = reihe(k);
+  for (let i = r.j.length - 1; i >= 0; i--) {
+    if (r.j[i] <= zustand.jahr && ortsteile.some(o => hatWert(k, o, i))) return i;
   }
   return -1;
 }
 
-const werteEntlangLinie = (a, k) => D.stops.map(s => reihe(a).w[s.ortsteil][k]);
-
-// Bei absoluten Zahlen (z. B. Einwohner) ist die Stadt um Größenordnungen größer, dann nicht vergleichen
+// Bei absoluten Größenordnungen nicht mit der Stadt vergleichen
 function vergleichbar(stadtwert, werte) {
   const w = werte.filter(v => v !== null);
   if (stadtwert === null || !w.length) return false;
@@ -284,106 +278,116 @@ function grundlayout(hoehe) {
     separators: ",.",
     showlegend: false,
     hoverlabel: { bgcolor: farbe("--surface"), bordercolor: farbe("--axis"), font: { family: SCHRIFT, color: farbe("--text-1") } },
-    yaxis: { gridcolor: farbe("--grid"), zeroline: false, tickfont: { color: farbe("--muted") }, automargin: true, separatethousands: true, exponentformat: "none" },
     shapes: [],
     annotations: [],
   };
 }
 
-// ---------- Diagramme entlang der Linie (ein Panel je Auswahl) ----------
+// ---------- Panels entlang der Linie: Haltestellen senkrecht, Werte waagerecht ----------
 
-function achseHaltestellen(mitBeschriftung) {
-  return {
-    tickvals: D.stops.map((_, i) => i + 1),
-    ticktext: D.stops.map(s => s.name),
-    showticklabels: mitBeschriftung,
-    tickangle: -55,
-    tickfont: { size: 10, color: farbe("--muted") },
-    showgrid: false,
-    linecolor: farbe("--axis"),
-    range: [0.5, D.stops.length + 0.5],
-    fixedrange: true,
+function layoutLinie(nr, anzahl) {
+  const erstes = nr === 0, letztes = nr === anzahl - 1;
+  const layout = grundlayout(D.stops.length * ZEILE + RAND.t + RAND.b);
+  // Feste Ränder: alle Panels gleich hoch, die Haltestellen stehen auf einer Höhe
+  layout.margin = { l: erstes ? RAND.links : RAND.innen, r: letztes ? RAND.rechts : RAND.innen, t: RAND.t, b: RAND.b, autoexpand: false };
+  layout.yaxis = {
+    range: [D.stops.length + 0.5, 0.5], tickvals: yStops, ticktext: D.stops.map(s => s.name),
+    showticklabels: erstes, tickfont: { size: 11, color: farbe("--text-2") }, showgrid: false, zeroline: false,
+    fixedrange: true, automargin: false,
   };
-}
-
-function ortsteilBaender(layout, mitNamen) {
+  // Ortsteile als Bänder, Namen rechts neben dem letzten Panel
   abschnitte.forEach((a, i) => {
     if (i % 2 === 1) layout.shapes.push({
-      type: "rect", xref: "x", yref: "paper", x0: a.von - 0.5, x1: a.bis + 0.5, y0: 0, y1: 1,
+      type: "rect", xref: "paper", yref: "y", x0: 0, x1: 1, y0: a.von - 0.5, y1: a.bis + 0.5,
       fillcolor: farbe("--band"), line: { width: 0 }, layer: "below",
     });
-    if (mitNamen) layout.annotations.push({
-      xref: "x", yref: "paper", x: a.von - 0.3, y: 1.01, xanchor: "left", yanchor: "bottom",
-      text: a.ortsteil, textangle: -35, showarrow: false, font: { size: 10, color: farbe("--text-2") },
+    if (letztes) layout.annotations.push({
+      xref: "paper", yref: "y", x: 1, y: (a.von + a.bis) / 2, xanchor: "left", yanchor: "middle", xshift: 8,
+      text: a.ortsteil, showarrow: false, font: { size: 11, color: farbe("--text-2") },
     });
   });
+  return layout;
 }
 
-function panelLinie(a, nr, anzahl, div) {
-  const r = reihe(a), k = zeitIndex(a);
-  const erstes = nr === 0, letztes = nr === anzahl - 1;
-  const x = D.stops.map((_, i) => i + 1);
-  const heatmap = zustand.ansicht === "heatmap";
+function xAchse(extra = {}) {
+  return { side: "top", gridcolor: farbe("--grid"), zeroline: false, tickfont: { size: 10, color: farbe("--muted") },
+           fixedrange: true, automargin: false, separatethousands: true, exponentformat: "none", ...extra };
+}
 
-  // Plotbereich gleich hoch, Ränder für Ortsteilnamen oben und Haltestellen unten zusätzlich
-  const oben = erstes ? 96 : 12, unten = letztes ? 150 : 12;
-  const plot = heatmap ? Math.max(140, r.z.length * 14) : 200;
-  const layout = grundlayout(plot + oben + unten);
-  // Feste Ränder ohne automatisches Erweitern: so stehen die Haltestellen in allen Panels exakt übereinander
-  layout.margin = { l: 84, r: 110, t: oben, b: unten, autoexpand: false };
-  layout.yaxis.automargin = false;
-  layout.xaxis = achseHaltestellen(letztes);
-  ortsteilBaender(layout, erstes);
+function panelLinie(k, nr, anzahl, div) {
+  const r = reihe(k), i = zeitIndex(k);
+  const layout = layoutLinie(nr, anzahl);
   let traces;
 
-  if (!heatmap) {
-    const y = k >= 0 ? werteEntlangLinie(a, k) : D.stops.map(() => null);
-    traces = [{
-      type: "scatter", mode: "lines+markers", x, y, connectgaps: false,
-      line: { color: farbe("--series-1"), width: 2, shape: "hvh" },
-      marker: { size: 9, color: farbe("--series-1"), line: { color: farbe("--surface"), width: 2 } },
-      customdata: D.stops.map((s, i) => [s.name, s.ortsteil, zahl(y[i])]),
-      hovertemplate: "<b>%{customdata[0]}</b><br>Ortsteil %{customdata[1]}<br>%{customdata[2]}<extra></extra>",
-    }];
-    const stadt = k >= 0 ? r.w[D.stadt][k] : null;
-    if (vergleichbar(stadt, y)) {
-      layout.shapes.push({ type: "line", xref: "paper", yref: "y", x0: 0, x1: 1, y0: stadt, y1: stadt,
-                           line: { color: farbe("--muted"), width: 1 } });
-      layout.annotations.push({ xref: "paper", yref: "y", x: 1, y: stadt, xanchor: "left", yanchor: "middle",
-                                text: " Stadt " + zahl(stadt), showarrow: false, font: { size: 11, color: farbe("--text-2") } });
-    }
-  } else {
-    const z = r.z.map((_, i) => werteEntlangLinie(a, i));
+  if (k.typ === "parteien") {
+    // Gestapelte Balken: je Haltestelle 100 % der Stimmen
+    layout.barmode = "stack";
+    layout.bargap = 0.25;
+    // Achse unten, damit oben Platz für die Legende ist
+    layout.xaxis = xAchse({ side: "bottom", range: [0, 100], ticksuffix: " %", dtick: 25 });
+    layout.showlegend = true;
+    layout.legend = { orientation: "h", x: 0, xanchor: "left", y: 1, yanchor: "bottom", traceorder: "normal",
+                      font: { size: 10, color: farbe("--text-2") }, itemwidth: 30 };
+    traces = r.parteien.map(p => {
+      const x = D.stops.map(s => i >= 0 ? r.w[p][s.ortsteil][i] : null);
+      return {
+        type: "bar", orientation: "h", name: p, x, y: yStops,
+        marker: { color: parteifarbe(p), line: { color: farbe("--surface"), width: 1 } },
+        customdata: D.stops.map((s, j) => [s.name, s.ortsteil, x[j] === null ? "nicht angetreten" : zahl(x[j]) + " %"]),
+        hovertemplate: `<b>${p}</b>: %{customdata[2]}<br>%{customdata[0]} · %{customdata[1]}<extra></extra>`,
+      };
+    });
+  } else if (zustand.ansicht === "heatmap") {
+    const z = D.stops.map(s => r.w[s.ortsteil]);
     let skala, extra = {};
-    if (divergierend(a.merk)) {
+    if (divergierend(k)) {
       const stufen = [...DIVERGIEREND.blau, dunkel() ? DIVERGIEREND.mitte.dunkel : DIVERGIEREND.mitte.hell, ...DIVERGIEREND.rot];
-      skala = stufen.map((c, i) => [i / (stufen.length - 1), c]);
+      skala = stufen.map((c, j) => [j / (stufen.length - 1), c]);
       const max = Math.max(...z.flat().filter(v => v !== null).map(Math.abs));
-      extra = { zmid: 0, zmin: -max, zmax: max };   // 0 liegt genau in der neutralen Mitte
+      extra = { zmid: 0, zmin: -max, zmax: max };
     } else {
-      skala = (dunkel() ? [...RAMPE].reverse() : RAMPE).map((c, i) => [i / (RAMPE.length - 1), c]);
+      skala = (dunkel() ? [...RAMPE].reverse() : RAMPE).map((c, j) => [j / (RAMPE.length - 1), c]);
     }
     layout.plot_bgcolor = farbe("--band");
     layout.shapes = [];
-    layout.yaxis = { type: "category", tickfont: { size: 10, color: farbe("--muted") }, showgrid: false, automargin: false, fixedrange: true };
-    // Gewählten Zeitpunkt markieren. Position als Zeilennummer, denn ein Text wie "2020"
-    // würde auf einer Kategorie-Achse als Zeile 2020 gelesen und die Achse sprengen.
-    if (k >= 0) layout.annotations.push({ xref: "paper", yref: "y", x: 1, y: k, xanchor: "left", yanchor: "middle",
-                                          text: " ◂", showarrow: false, font: { size: 12, color: farbe("--text-1") } });
+    layout.xaxis = { side: "top", type: "category", tickangle: -60, tickfont: { size: 9, color: farbe("--muted") },
+                     showgrid: false, fixedrange: true, automargin: false };
+    // Gewählten Zeitpunkt unten markieren (Position als Spaltennummer, siehe Nr. 18)
+    if (i >= 0) layout.annotations.push({ xref: "x", yref: "paper", x: i, y: 0, yanchor: "top", text: "▴ " + r.z[i],
+                                          showarrow: false, font: { size: 10, color: farbe("--text-1") } });
     traces = [{
-      type: "heatmap", x, y: r.z, z, colorscale: skala, ...extra, xgap: 2, ygap: 2, hoverongaps: false,
-      customdata: z.map(zeile => zeile.map((v, i) => [D.stops[i].name, D.stops[i].ortsteil, zahl(v)])),
-      hovertemplate: "<b>%{y}</b> · %{customdata[0]}<br>Ortsteil %{customdata[1]}<br>%{customdata[2]}<extra></extra>",
-      colorbar: { thickness: 10, outlinewidth: 0, tickfont: { size: 10, color: farbe("--muted") }, len: 0.9, x: 1.03, xanchor: "left",
-                  separatethousands: true, exponentformat: "none" },
+      type: "heatmap", x: r.z, y: yStops, z, colorscale: skala, ...extra, xgap: 1, ygap: 2, hoverongaps: false,
+      customdata: z.map((zeile, s) => zeile.map(v => [D.stops[s].name, D.stops[s].ortsteil, zahl(v)])),
+      hovertemplate: "<b>%{x}</b> · %{customdata[0]}<br>Ortsteil %{customdata[1]}<br>%{customdata[2]}<extra></extra>",
+      colorbar: { orientation: "h", thickness: 8, outlinewidth: 0, len: 0.8, x: 0.5, xanchor: "center", y: -0.01, yanchor: "top",
+                  tickfont: { size: 9, color: farbe("--muted") }, separatethousands: true, exponentformat: "none" },
     }];
+    layout.margin.b = RAND.b + 26;
+  } else {
+    const x = D.stops.map(s => i >= 0 ? r.w[s.ortsteil][i] : null);
+    layout.xaxis = xAchse();
+    traces = [{
+      type: "scatter", mode: "lines+markers", x, y: yStops, connectgaps: false,
+      line: { color: farbe("--series-1"), width: 2, shape: "vhv" },
+      marker: { size: 8, color: farbe("--series-1"), line: { color: farbe("--surface"), width: 2 } },
+      customdata: D.stops.map((s, j) => [s.name, s.ortsteil, zahl(x[j])]),
+      hovertemplate: `<b>%{customdata[0]}</b><br>Ortsteil %{customdata[1]}<br>%{customdata[2]} ${k.einheit}<extra></extra>`,
+    }];
+    const stadt = i >= 0 ? r.w[D.stadt][i] : null;
+    if (vergleichbar(stadt, x)) {
+      layout.shapes.push({ type: "line", xref: "x", yref: "paper", x0: stadt, x1: stadt, y0: 0, y1: 1,
+                           line: { color: farbe("--muted"), width: 1 } });
+      layout.annotations.push({ xref: "x", yref: "paper", x: stadt, y: 0, yanchor: "top", text: "Stadt " + zahl(stadt),
+                                showarrow: false, font: { size: 10, color: farbe("--text-2") } });
+    }
   }
 
+  // Alle Panels gleich hoch halten (die Wahl-Legende braucht keinen Extra-Platz)
+  layout.height = D.stops.length * ZEILE + layout.margin.t + layout.margin.b;
   Plotly.react(div, traces, layout, PLOT_OPTIONEN);
-  // Klick auf eine Haltestelle wählt ihren Ortsteil für die Zeitdiagramme
   if (!div._klick) {
     div.on("plotly_click", ev => {
-      const s = D.stops[Math.round(ev.points[0].x) - 1];
+      const s = D.stops[Math.round(ev.points[0].y) - 1];
       if (!s) return;
       zustand.ot = s.ortsteil;
       el("ortsteil").value = s.ortsteil;
@@ -393,72 +397,92 @@ function panelLinie(a, nr, anzahl, div) {
   }
 }
 
-function kennzahlen(a) {
-  const r = reihe(a), k = zeitIndex(a);
-  if (k < 0) return [];
-  const y = ortsteile.map(o => ({ ortsteil: o, wert: r.w[o][k] })).filter(e => e.wert !== null);
-  const gipfel = y.reduce((p, q) => (q.wert > p.wert ? q : p));
-  const tal = y.reduce((p, q) => (q.wert < p.wert ? q : p));
-  const teile = [["Gipfel", `${zahl(gipfel.wert)} ${gipfel.ortsteil}`], ["Tal", `${zahl(tal.wert)} ${tal.ortsteil}`]];
-  if (tal.wert > 0) teile.push(["Faktor", (gipfel.wert / tal.wert).toLocaleString("de-DE", { maximumFractionDigits: 1 })]);
-  teile.push(["Stadt Leipzig", zahl(r.w[D.stadt][k])]);
+function kennzahlenZeile(k) {
+  const r = reihe(k), i = zeitIndex(k);
+  if (i < 0) return [];
+  if (k.typ === "parteien") {
+    const stadt = r.parteien.filter(p => p !== "Sonstige" && r.w[p][D.stadt][i] !== null)
+      .sort((a, b) => r.w[b][D.stadt][i] - r.w[a][D.stadt][i]).slice(0, 3);
+    return [["Stadt Leipzig", stadt.map(p => `${p} ${zahl(r.w[p][D.stadt][i])} %`).join(", ")],
+            ["Wahlbeteiligung Stadt", zahl(r.beteiligung[D.stadt][i]) + " %"]];
+  }
+  const y = ortsteile.map(o => ({ o, v: r.w[o][i] })).filter(e => e.v !== null);
+  const gipfel = y.reduce((p, q) => (q.v > p.v ? q : p));
+  const tal = y.reduce((p, q) => (q.v < p.v ? q : p));
+  const teile = [["Gipfel", `${zahl(gipfel.v)} ${gipfel.o}`], ["Tal", `${zahl(tal.v)} ${tal.o}`]];
+  if (tal.v > 0) teile.push(["Faktor", (gipfel.v / tal.v).toLocaleString("de-DE", { maximumFractionDigits: 1 })]);
+  teile.push(["Stadt", zahl(r.w[D.stadt][i])]);
   return teile;
+}
+
+function panelsAnlegen(ziel, mitKennzahlen) {
+  const ids = zustand.auswahl.map(k => k.id).join(",");
+  if (ziel.dataset.ids === ids) return;
+  ziel.style.setProperty("--n", Math.max(1, zustand.auswahl.length));
+  ziel.replaceChildren(...zustand.auswahl.map(() => {
+    const p = document.createElement("div");
+    p.className = "panel";
+    p.innerHTML = `<div class="panel-kopf"><h3></h3><div class="einheit"></div>${mitKennzahlen ? '<div class="kennzahlen"></div>' : ""}</div>`
+                + `<div class="diagramm"></div><p class="unterzeile"></p>`;
+    return p;
+  }));
+  ziel.dataset.ids = ids;
 }
 
 function zeichneLinie() {
   const ziel = el("panels-linie");
   if (!zustand.auswahl.length) {
-    ziel.replaceChildren(Object.assign(document.createElement("p"), { className: "leer", textContent: "Noch kein Indikator gewählt. Wähle oben einen aus und klicke „Hinzufügen“." }));
+    ziel.dataset.ids = "";
+    ziel.replaceChildren(Object.assign(document.createElement("p"), { className: "leer", textContent: "Noch keine Kennzahl gewählt. Wähle oben bis zu drei aus." }));
     return;
   }
-  // Panels nur neu anlegen, wenn sich die Auswahl geändert hat (sonst flackert Plotly)
-  const ids = zustand.auswahl.map(schluessel).join("|");
-  if (ziel.dataset.ids !== ids) {
-    ziel.replaceChildren(...zustand.auswahl.map(() => {
-      const p = document.createElement("div");
-      p.className = "panel";
-      p.innerHTML = `<div class="panel-kopf"><h3></h3><span class="zeitpunkt"></span></div><div class="kennzahlen"></div><div class="diagramm"></div>`;
-      return p;
-    }));
-    ziel.dataset.ids = ids;
-  }
-  zustand.auswahl.forEach((a, nr) => {
-    const p = ziel.children[nr], r = reihe(a), k = zeitIndex(a);
-    p.querySelector("h3").textContent = `${a.merk} · ${indikator(a.ind).titel}`;
-    p.querySelector(".zeitpunkt").textContent = k >= 0
-      ? (r.z[k] === String(zustand.jahr) ? r.z[k] : `Stand ${r.z[k]} (neuester Wert bis ${zustand.jahr})`)
-      : `kein Wert bis ${zustand.jahr}`;
-    p.querySelector(".kennzahlen").replaceChildren(...kennzahlen(a).map(([t, w]) => {
+  panelsAnlegen(ziel, true);
+  zustand.auswahl.forEach((k, nr) => {
+    const p = ziel.children[nr], r = reihe(k), i = zeitIndex(k);
+    p.querySelector("h3").textContent = k.titel;
+    const stand = i < 0 ? `kein Wert bis ${zustand.jahr}`
+      : r.z[i] === String(zustand.jahr) ? `Stand ${r.z[i]}` : `Stand ${r.z[i]} (neuester Wert bis ${zustand.jahr})`;
+    p.querySelector(".einheit").textContent = `${k.einheit} · ${stand}`;
+    p.querySelector(".kennzahlen").replaceChildren(...kennzahlenZeile(k).map(([t, w]) => {
       const s = document.createElement("span");
       s.append(t + ": ", Object.assign(document.createElement("b"), { textContent: w }));
       return s;
     }));
-    panelLinie(a, nr, zustand.auswahl.length, p.querySelector(".diagramm"));
+    p.querySelector(".unterzeile").textContent = k.typ === "parteien" && zustand.ansicht === "heatmap"
+      ? "Für Wahlergebnisse gibt es keine Heatmap, hier immer die gewählte Wahl." : "";
+    panelLinie(k, nr, zustand.auswahl.length, p.querySelector(".diagramm"));
   });
-  const [frueh, aktuell] = dunkel() ? ["dunkel", "hell"] : ["hell", "dunkel"];
+  const [, aktuell] = dunkel() ? ["dunkel", "hell"] : ["hell", "dunkel"];
   el("unter-linie").textContent = zustand.ansicht === "einzeln"
-    ? "Jedes Diagramm hat seine eigene Skala. Graue Linie: Wert der Gesamtstadt, wenn vergleichbar."
-    : `Jede Zeile ein Zeitpunkt. Einfarbig: ${aktuell} = hoher Wert. Rot/blau: über/unter dem Mittel bzw. positiv/negativ. ◂ markiert den gewählten Zeitpunkt.`;
+    ? "Die Haltestellen stehen in allen Diagrammen auf derselben Höhe. Jedes Diagramm hat seine eigene Skala. Graue Linie: Wert der Gesamtstadt, wenn vergleichbar."
+    : `Jede Spalte ein Zeitpunkt. Einfarbig: ${aktuell} = hoher Wert. Hitze: rot = wärmer, blau = kühler als das Stadtmittel. ▴ markiert den gewählten Zeitpunkt.`;
 }
 
 // ---------- Tabelle ----------
 
 function zeichneTabelle() {
-  const spalten = zustand.auswahl.map(a => ({ a, k: zeitIndex(a) }));
+  const spalten = zustand.auswahl.map(k => ({ k, i: zeitIndex(k) }));
   const kopf = document.createElement("tr");
-  ["Nr.", "Haltestelle", "Ortsteil", "Stadtbezirk", ...spalten.map(({ a, k }) => `${a.merk} (${k >= 0 ? reihe(a).z[k] : "–"})`)]
+  ["Nr.", "Haltestelle", "Ortsteil", "Stadtbezirk",
+   ...spalten.map(({ k, i }) => `${k.titel}${k.typ === "parteien" ? ": stärkste Partei" : ` (${k.einheit})`} · ${i >= 0 ? reihe(k).z[i] : "–"}`)]
     .forEach((t, j) => {
       const th = document.createElement("th");
       th.textContent = t;
       if (j === 0 || j > 3) th.className = "zahl";
       kopf.append(th);
     });
-  const zeilen = D.stops.map((s, i) => {
+  const zeilen = D.stops.map((s, n) => {
     const tr = document.createElement("tr");
-    const zellen = [i + 1, s.name, s.ortsteil, s.bezirk, ...spalten.map(({ a, k }) => {
-      if (k < 0) return "–";
-      const v = reihe(a).w[s.ortsteil][k];
-      return v === null ? `– (${reihe(a).h[s.ortsteil][k] || "kein Wert"})` : zahl(v);
+    const zellen = [n + 1, s.name, s.ortsteil, s.bezirk, ...spalten.map(({ k, i }) => {
+      if (i < 0) return "–";
+      const r = reihe(k);
+      if (k.typ === "parteien") {
+        const p = r.parteien.filter(q => q !== "Sonstige" && r.w[q][s.ortsteil][i] !== null)
+          .sort((a, b) => r.w[b][s.ortsteil][i] - r.w[a][s.ortsteil][i])[0];
+        return p ? `${p} ${zahl(r.w[p][s.ortsteil][i])} %` : "–";
+      }
+      const v = r.w[s.ortsteil][i];
+      return v === null ? `– (${r.h[s.ortsteil][i] || "kein Wert"})` : zahl(v);
     })];
     zellen.forEach((inhalt, j) => {
       const td = document.createElement("td");
@@ -471,74 +495,63 @@ function zeichneTabelle() {
   el("tabelle").replaceChildren(kopf, ...zeilen);
 }
 
-// ---------- Entwicklung über die Zeit (ein Panel je Auswahl) ----------
+// ---------- Entwicklung über die Zeit ----------
 
-function panelZeit(a, div, hinweis) {
-  const r = reihe(a), ind = indikator(a.ind);
-  const y = r.w[zustand.ot], stadt = r.w[D.stadt];
-  const stadtwerte = stadt.filter(v => v !== null);
-  const stadtmittel = stadtwerte.length ? stadtwerte.reduce((p, q) => p + q, 0) / stadtwerte.length : null;
-  const mitStadt = vergleichbar(stadtmittel, y);
-  const layout = grundlayout(240);
-  layout.margin = { l: 64, r: 130, t: 12, b: 32 };
+function panelZeit(k, div, hinweis) {
+  const r = reihe(k);
+  const layout = grundlayout(280);
+  layout.margin = { l: 48, r: 110, t: 12, b: 32 };
   layout.xaxis = { showgrid: false, linecolor: farbe("--axis"), tickfont: { color: farbe("--muted") }, tickformat: "d",
-                   range: [Math.min(...r.j) - 0.5, Math.max(...r.j) + 0.5] };
-
-  const spur = (name, werte, col, breite) => ({
+                   range: [Math.min(...r.j) - 0.5, Math.max(...r.j) + 0.5], fixedrange: true };
+  layout.yaxis = { gridcolor: farbe("--grid"), zeroline: false, tickfont: { color: farbe("--muted") }, separatethousands: true, exponentformat: "none", fixedrange: true };
+  const spur = (name, werte, col, breite, einheit) => ({
     type: "scatter", mode: "lines+markers", name, x: r.j, y: werte, connectgaps: false,
     line: { color: col, width: breite },
     marker: { size: 8, color: col, line: { color: farbe("--surface"), width: 2 } },
     customdata: werte.map((v, i) => [r.z[i], zahl(v)]),
-    hovertemplate: `<b>${name}</b><br>%{customdata[0]}: %{customdata[1]}<extra></extra>`,
+    hovertemplate: `<b>${name}</b><br>%{customdata[0]}: %{customdata[1]} ${einheit}<extra></extra>`,
   });
-  const traces = [spur(zustand.ot, y, farbe("--series-1"), 2)];
-  if (mitStadt) traces.push(spur(D.stadt, stadt, farbe("--muted"), 1.5));
+  let traces, texte = [];
 
-  // Endpunkte direkt beschriften (ersetzt die Legende)
+  if (k.typ === "parteien") {
+    traces = r.parteien.filter(p => p !== "Sonstige").map(p => spur(p, r.w[p][zustand.ot], parteifarbe(p), 2, "%"));
+    layout.yaxis.ticksuffix = " %";
+  } else {
+    const y = r.w[zustand.ot], stadt = r.w[D.stadt];
+    const sw = stadt.filter(v => v !== null);
+    const mitStadt = vergleichbar(sw.length ? sw.reduce((a, b) => a + b, 0) / sw.length : null, y);
+    traces = [spur(zustand.ot, y, farbe("--series-1"), 2, k.einheit)];
+    if (mitStadt) traces.push(spur(D.stadt, stadt, farbe("--muted"), 1.5, k.einheit));
+    else texte.push("Ohne Stadtvergleich (Größenordnung nicht vergleichbar).");
+  }
+  // Endpunkte direkt beschriften statt Legende
   traces.forEach(t => {
     const i = t.y.map(v => v !== null).lastIndexOf(true);
-    if (i >= 0) layout.annotations.push({
-      xref: "x", yref: "y", x: t.x[i], y: t.y[i], xanchor: "left", yanchor: "middle",
-      text: `  ${t.name} ${zahl(t.y[i])}`, showarrow: false, font: { size: 11, color: farbe("--text-2") },
-    });
+    if (i >= 0) layout.annotations.push({ xref: "x", yref: "y", x: t.x[i], y: t.y[i], xanchor: "left", yanchor: "middle",
+      text: `  ${t.name} ${zahl(t.y[i])}`, showarrow: false, font: { size: 10, color: farbe("--text-2") } });
   });
-
-  // Gewähltes Jahr als dezente Fläche
   layout.shapes.push({ type: "rect", xref: "x", yref: "paper", x0: zustand.jahr - 0.5, x1: zustand.jahr + 0.5, y0: 0, y1: 1,
                        fillcolor: farbe("--band"), line: { width: 0 }, layer: "below" });
-
-  // Jahre, in denen Ortsteilgrenzen angepasst wurden (nicht bei Daten auf heutigen Grenzen)
-  let grenzen = [];
-  if (ind.zeitart === "jahr" && ind.thema !== "Umwelt") {
-    grenzen = GRENZJAHRE.filter(j => j >= r.j[0] && j <= r.j[r.j.length - 1]);
-    grenzen.forEach(j => layout.shapes.push({
-      type: "line", xref: "x", yref: "paper", x0: j, x1: j, y0: 0, y1: 1, line: { color: farbe("--axis"), width: 1 }, layer: "below",
-    }));
+  if (amtlicheJahresdaten(k)) {
+    const grenzen = GRENZJAHRE.filter(j => j >= r.j[0] && j <= r.j[r.j.length - 1]);
+    grenzen.forEach(j => layout.shapes.push({ type: "line", xref: "x", yref: "paper", x0: j, x1: j, y0: 0, y1: 1,
+                                              line: { color: farbe("--axis"), width: 1 }, layer: "below" }));
+    if (grenzen.length) texte.push(`Senkrechte Linien: Ortsteilgrenzen angepasst (${grenzen.join(", ")}).`);
   }
   Plotly.react(div, traces, layout, PLOT_OPTIONEN);
-  hinweis.textContent = [
-    mitStadt ? "" : "Ohne Stadtvergleich (Größenordnung nicht vergleichbar oder kein Stadtwert).",
-    grenzen.length ? `Senkrechte Linien: Ortsteilgrenzen angepasst (${grenzen.join(", ")}).` : "",
-  ].filter(Boolean).join(" ");
+  hinweis.textContent = texte.join(" ");
 }
 
 function zeichneZeit() {
   el("titel-zeit").textContent = `${zustand.ot} über die Zeit`;
   const ziel = el("panels-zeit");
-  const ids = zustand.auswahl.map(schluessel).join("|");
-  if (ziel.dataset.ids !== ids) {
-    ziel.replaceChildren(...zustand.auswahl.map(() => {
-      const p = document.createElement("div");
-      p.className = "panel";
-      p.innerHTML = `<div class="panel-kopf"><h3></h3></div><div class="diagramm"></div><p class="unterzeile"></p>`;
-      return p;
-    }));
-    ziel.dataset.ids = ids;
-  }
-  zustand.auswahl.forEach((a, nr) => {
+  if (!zustand.auswahl.length) { ziel.replaceChildren(); ziel.dataset.ids = ""; return; }
+  panelsAnlegen(ziel, false);
+  zustand.auswahl.forEach((k, nr) => {
     const p = ziel.children[nr];
-    p.querySelector("h3").textContent = `${a.merk} · ${indikator(a.ind).titel}`;
-    panelZeit(a, p.querySelector(".diagramm"), p.querySelector(".unterzeile"));
+    p.querySelector("h3").textContent = k.titel;
+    p.querySelector(".einheit").textContent = k.einheit;
+    panelZeit(k, p.querySelector(".diagramm"), p.querySelector(".unterzeile"));
   });
 }
 
@@ -546,35 +559,29 @@ function zeichneZeit() {
 
 function zeichneFussnoten() {
   const noten = [
-    "Jede Haltestelle zeigt den Wert des Ortsteils, in dem sie liegt. Haltestellen im selben Ortsteil haben deshalb denselben Wert, die Linie verläuft in Stufen.",
+    "Jede Haltestelle zeigt den Wert des Ortsteils, in dem sie liegt. Haltestellen im selben Ortsteil haben deshalb denselben Wert.",
     "Linienführung: Fahrplan der LVB, Stand Dezember 2022. Sie wird für alle Zeitpunkte verwendet.",
-    "Die Indikatoren liegen zu unterschiedlichen Zeitpunkten vor. Jedes Diagramm zeigt den neuesten Wert bis zum gewählten Jahr.",
+    "Die Kennzahlen liegen zu unterschiedlichen Zeitpunkten vor. Jedes Diagramm zeigt den neuesten Wert bis zum gewählten Jahr.",
   ];
-  const inds = zustand.auswahl.map(a => indikator(a.ind));
-  const hat = bedingung => inds.some(bedingung);
-  if (hat(i => i.thema === "Bevölkerung")) noten.push("Einwohner sind Personen mit Hauptwohnsitz. Nebenwohnsitze zählen nicht mit.");
-  if (hat(i => i.zeitart === "jahr" && i.thema !== "Umwelt")) noten.push("Die Grenzen einiger Ortsteile wurden 2006, 2012 und 2014 angepasst. Werte davor beziehen sich teils auf den alten Zuschnitt. Besonders betroffen: Einwohnerdichte sowie absolute Zahlen in Heiterblick (2013).");
-  if (hat(i => i.umfrage)) noten.push("Nettoeinkommen, Zufriedenheit, Schulabschlüsse, Mieten und Wohnsituation beruhen auf der Kommunalen Bürgerumfrage: eine Stichprobe, nur alle zwei Jahre. Pro Ortsteil antworten wenige Menschen, deshalb schwanken die Werte stark.");
-  if (hat(i => i.zeitart === "wahl")) noten.push("Wahlen: „DIE LINKE“ umfasst bis 2005 die Vorgänger PDS bzw. Linkspartei.PDS. Die Quelle enthält nur ausgewählte Parteien, die Anteile ergeben deshalb nicht 100 %. Lücken bedeuten: Partei nicht angetreten.");
-  if (hat(i => i.indikator === "flaechennutzung")) noten.push("Flächennutzung: 2016 wurden die Kategorien umgestellt. Die Jahre bis 2014 und ab 2016 sind nicht direkt vergleichbar.");
-  if (hat(i => i.thema === "Umwelt")) noten.push("Satellitendaten: Landsat 8/9 (USGS), Sommer Juni bis August, über den Microsoft Planetary Computer. Je Jahr der Mittelwert aller wolkenfreien Aufnahmen (1 bis 5 pro Sommer). 2013 und 2021 gab es keine verwendbare Aufnahme. Berechnet auf die heutigen Ortsteilgrenzen.");
-  if (hat(i => i.indikator === "oberflaechentemperatur")) {
-    noten.push("Gemessen wird die Oberflächentemperatur (Dächer, Asphalt, Wiesen) am Vormittag, nicht die Lufttemperatur. Die Oberfläche wird an Hitzetagen deutlich heißer als die Luft.");
-    noten.push("Die absolute Temperatur hängt vom Wetter am Aufnahmetag ab. Für Vergleiche zwischen Jahren eignet sich die Abweichung vom Stadtmittel besser. Abgeerntete, trockene Felder am Stadtrand werden besonders heiß.");
-  }
-  if (hat(i => i.thema !== "Umwelt")) noten.push("Die amtliche Statistik liefert keine Einheiten mit. Ob ein Merkmal eine Anzahl, ein Anteil in Prozent oder ein Betrag ist, ergibt sich bisher nur aus dem Namen.");
+  const hat = b => zustand.auswahl.some(b);
+  if (hat(k => k.thema === "Bevölkerung")) noten.push("Einwohner sind Personen mit Hauptwohnsitz. Nebenwohnsitze zählen nicht mit.");
+  if (hat(amtlicheJahresdaten)) noten.push("Die Grenzen einiger Ortsteile wurden 2006, 2012 und 2014 angepasst. Werte davor beziehen sich teils auf den alten Zuschnitt.");
+  if (hat(k => k.umfrage)) noten.push("Einkommen, Hochschulabschluss, Miete und Lebenszufriedenheit beruhen auf der Kommunalen Bürgerumfrage: eine Stichprobe, nur alle zwei Jahre. Pro Ortsteil antworten wenige Menschen, deshalb schwanken die Werte.");
+  if (hat(k => k.id === "zufriedenheit")) noten.push("Lebenszufriedenheit ist eine Durchschnittsnote aus der Bürgerumfrage: Je niedriger, desto zufriedener.");
+  if (hat(k => k.id === "straftaten")) noten.push("Straftaten werden am Tatort gezählt, aber auf die Einwohner bezogen. In der Innenstadt mit wenigen Einwohnern und vielen Besuchern ergeben sich deshalb sehr hohe Werte (Zentrum: rund 2.800 je 1.000 Einwohner).");
+  if (hat(k => k.typ === "parteien")) noten.push("Bundestagswahl: „DIE LINKE“ umfasst bis 2005 die Vorgänger PDS bzw. Linkspartei.PDS. „Sonstige“ ist der Rest zu 100 % und enthält alle Parteien, die die Quelle nicht einzeln ausweist. Fehlt eine Partei, ist sie nicht angetreten.");
+  if (hat(k => k.thema === "Umwelt")) noten.push("Satellitendaten: Landsat 8/9 (USGS), Sommer Juni bis August. Je Jahr der Mittelwert aller wolkenfreien Aufnahmen (1 bis 5 pro Sommer), 2013 und 2021 ohne verwendbare Aufnahme. Berechnet auf die heutigen Ortsteilgrenzen.");
+  if (hat(k => k.id === "hitze")) noten.push("Hitze: gemessen wird die Oberflächentemperatur (Dächer, Asphalt, Wiesen) am Vormittag, nicht die Lufttemperatur. Gezeigt ist die Abweichung vom Stadtmittel am selben Tag, damit Jahre mit unterschiedlichem Wetter vergleichbar sind.");
+  if (hat(k => k.thema !== "Umwelt")) noten.push("Die amtliche Statistik liefert keine Einheiten mit. Sie sind hier nach den Merkmalsbeschreibungen ergänzt.");
 
-  zustand.auswahl.forEach(a => {
-    const r = reihe(a), k = zeitIndex(a);
-    if (k < 0) return;
+  zustand.auswahl.filter(k => k.typ !== "parteien").forEach(k => {
+    const r = reihe(k), i = zeitIndex(k);
+    if (i < 0) return;
     const gruende = {};
     D.stops.forEach(s => {
-      if (r.w[s.ortsteil][k] === null) {
-        const g = r.h[s.ortsteil][k] || "kein Wert";
-        gruende[g] = (gruende[g] || 0) + 1;
-      }
+      if (r.w[s.ortsteil][i] === null) { const g = r.h[s.ortsteil][i] || "kein Wert"; gruende[g] = (gruende[g] || 0) + 1; }
     });
-    Object.entries(gruende).forEach(([g, n]) => noten.push(`${a.merk} (${r.z[k]}): ${n} von ${D.stops.length} Haltestellen ohne Wert (${g}).`));
+    Object.entries(gruende).forEach(([g, n]) => noten.push(`${k.titel} (${r.z[i]}): ${n} von ${D.stops.length} Haltestellen ohne Wert (${g}).`));
   });
   noten.push("Quellen: Stadt Leipzig, Amt für Statistik und Wahlen (Datenlizenz Deutschland – Namensnennung 2.0); Landsat-Daten mit freundlicher Genehmigung des U.S. Geological Survey. Eigene Aufbereitung.");
   el("fussnoten").replaceChildren(...noten.map(t => Object.assign(document.createElement("li"), { textContent: t })));
@@ -582,23 +589,14 @@ function zeichneFussnoten() {
 
 // ---------- Auswahl und Steuerung ----------
 
-function zeichneAuswahl() {
-  const chips = zustand.auswahl.map((a, i) => {
-    const c = document.createElement("span");
-    c.className = "chip";
-    const text = Object.assign(document.createElement("span"), { textContent: `${a.merk} · ${indikator(a.ind).titel}` });
-    const x = Object.assign(document.createElement("button"), { type: "button", textContent: "×" });
-    x.setAttribute("aria-label", `${a.merk} entfernen`);
-    x.addEventListener("click", () => { zustand.auswahl.splice(i, 1); alles(); });
-    c.append(text, x);
-    return c;
+function zeichneWaehler() {
+  const voll = zustand.auswahl.length >= MAX_AUSWAHL;
+  el("waehler-kopf").textContent = `Kennzahlen (${zustand.auswahl.length} von maximal ${MAX_AUSWAHL} gewählt)`;
+  document.querySelectorAll(".schalter").forEach(b => {
+    const an = zustand.auswahl.some(k => k.id === b.dataset.id);
+    b.setAttribute("aria-pressed", an);
+    b.disabled = voll && !an;
   });
-  const titel = Object.assign(document.createElement("span"), { className: "titel", textContent: "Ausgewählt:" });
-  const grenze = Object.assign(document.createElement("span"), { className: "grenze",
-    textContent: zustand.auswahl.length >= MAX_AUSWAHL ? `Maximal ${MAX_AUSWAHL} gleichzeitig.` : "" });
-  el("auswahl").replaceChildren(titel, ...chips, grenze);
-  const doppelt = zustand.auswahl.some(a => a.ind === el("indikator").value && a.merk === el("merkmal").value);
-  el("hinzufuegen").disabled = zustand.auswahl.length >= MAX_AUSWAHL || doppelt;
 }
 
 function zeitreglerAnpassen() {
@@ -613,49 +611,44 @@ function zeitreglerAnpassen() {
 }
 
 function hashSchreiben() {
-  const p = new URLSearchParams({ auswahl: zustand.auswahl.map(schluessel).join("|"), ansicht: zustand.ansicht });
+  const p = new URLSearchParams({ auswahl: zustand.auswahl.map(k => k.id).join(","), ansicht: zustand.ansicht });
   if (zustand.jahr !== null) p.set("jahr", zustand.jahr);
   history.replaceState(null, "", "#" + p.toString());
 }
 
 function alles() {
-  zeichneAuswahl();
+  zeichneWaehler();
   zeitreglerAnpassen();
   zeichneLinie();
-  if (zustand.auswahl.length) {
-    zeichneTabelle();
-    zeichneZeit();
-  } else {
-    el("tabelle").replaceChildren();
-    el("panels-zeit").replaceChildren();
-    el("panels-zeit").dataset.ids = "";
-  }
+  if (zustand.auswahl.length) zeichneTabelle(); else el("tabelle").replaceChildren();
+  zeichneZeit();
   zeichneFussnoten();
   hashSchreiben();
 }
 
-function fuelleMerkmale() {
-  el("merkmal").replaceChildren(...indikator(el("indikator").value).merkmale.map(m => new Option(m, m)));
-  zeichneAuswahl();
-}
-
-// Indikatoren nach Thema gruppieren
-const themen = [...new Set(D.indikatoren.map(i => i.thema))];
-el("indikator").replaceChildren(...themen.map(t => {
-  const g = document.createElement("optgroup");
-  g.label = t;
-  D.indikatoren.filter(i => i.thema === t).forEach(i => g.append(new Option(i.titel + (i.umfrage ? " (Umfrage)" : ""), i.indikator)));
+// Schalter nach Thema gruppieren
+const themen = [...new Set(D.kennzahlen.map(k => k.thema))];
+el("themen").replaceChildren(...themen.map(t => {
+  const g = document.createElement("div");
+  g.className = "thema";
+  g.append(Object.assign(document.createElement("span"), { textContent: t }));
+  D.kennzahlen.filter(k => k.thema === t).forEach(k => {
+    const b = Object.assign(document.createElement("button"), { type: "button", className: "schalter", textContent: k.titel + (k.umfrage ? " *" : "") });
+    b.dataset.id = k.id;
+    if (k.umfrage) b.title = "beruht auf der Bürgerumfrage";
+    b.addEventListener("click", () => {
+      const i = zustand.auswahl.findIndex(x => x.id === k.id);
+      if (i >= 0) zustand.auswahl.splice(i, 1);
+      else if (zustand.auswahl.length < MAX_AUSWAHL) zustand.auswahl.push(k);
+      alles();
+    });
+    g.append(b);
+  });
   return g;
 }));
 el("ortsteil").replaceChildren(...ortsteile.map(o => new Option(o, o)));
 zustand.ot = ortsteile[0];
 
-el("indikator").addEventListener("change", fuelleMerkmale);
-el("merkmal").addEventListener("change", zeichneAuswahl);
-el("hinzufuegen").addEventListener("click", () => {
-  zustand.auswahl.push({ ind: el("indikator").value, merk: el("merkmal").value });
-  alles();
-});
 el("zeit").addEventListener("input", e => { zustand.jahr = jahre()[+e.target.value]; alles(); });
 el("ortsteil").addEventListener("change", e => { zustand.ot = e.target.value; zeichneZeit(); });
 document.querySelectorAll(".ansicht button").forEach(b => b.addEventListener("click", () => {
@@ -663,26 +656,20 @@ document.querySelectorAll(".ansicht button").forEach(b => b.addEventListener("cl
   document.querySelectorAll(".ansicht button").forEach(x => x.setAttribute("aria-pressed", x === b));
   alles();
 }));
-matchMedia("(prefers-color-scheme: dark)").addEventListener("change", alles);
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+  el("panels-linie").dataset.ids = ""; el("panels-zeit").dataset.ids = ""; alles();
+});
 
-// Startzustand, optional über die Adresse:
-// #auswahl=sgb2~SGB-II-Quote|oberflaechentemperatur~Abweichung vom Stadtmittel (°C)&ansicht=heatmap&jahr=2020
+// Startzustand, optional über die Adresse: #auswahl=sgb2_quote,hitze,bundestagswahl&ansicht=einzeln&jahr=2025
 const start = new URLSearchParams(location.hash.slice(1));
-const gueltig = a => D.daten[a.ind] && D.daten[a.ind][a.merk];
-let startAuswahl = (start.get("auswahl") || "").split("|").filter(Boolean)
-  .map(s => { const [ind, merk] = s.split("~"); return { ind, merk }; }).filter(gueltig).slice(0, MAX_AUSWAHL);
-if (!startAuswahl.length) startAuswahl = [
-  { ind: "sgb2", merk: "SGB-II-Quote" },
-  { ind: "oberflaechentemperatur", merk: "Abweichung vom Stadtmittel (°C)" },
-].filter(gueltig);
+let startAuswahl = (start.get("auswahl") || "").split(",").map(kennzahl).filter(Boolean).slice(0, MAX_AUSWAHL);
+if (!startAuswahl.length) startAuswahl = ["sgb2_quote", "hitze", "bundestagswahl"].map(kennzahl).filter(Boolean);
 zustand.auswahl = startAuswahl;
 if (["einzeln", "heatmap"].includes(start.get("ansicht"))) {
   zustand.ansicht = start.get("ansicht");
   document.querySelectorAll(".ansicht button").forEach(b => b.setAttribute("aria-pressed", b.dataset.ansicht === zustand.ansicht));
 }
 if (start.get("jahr")) zustand.jahr = +start.get("jahr");
-el("indikator").value = zustand.auswahl.length ? zustand.auswahl[0].ind : "sgb2";
-fuelleMerkmale();
 alles();
 </script>
 </body>
