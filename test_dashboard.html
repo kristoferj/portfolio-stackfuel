@@ -142,6 +142,10 @@
   .diagramm { width: 100%; }
   .unterzeile { color: var(--text-2); font-size: 13px; margin-top: 4px; }
   .leer { color: var(--text-2); font-size: 14px; padding: 24px 0; }
+  .keine-darstellung {
+    display: flex; align-items: center; justify-content: center; text-align: center;
+    background: var(--band); border-radius: 8px; color: var(--text-2); font-size: 13px; padding: 16px;
+  }
   @media (max-width: 900px) { .panels { grid-template-columns: minmax(0, 1fr); } .panel-kopf { min-height: 0; } }
 
   details { margin-top: 8px; }
@@ -276,7 +280,7 @@ const PARTEIFARBEN = {
 const GRENZJAHRE = [2006, 2012, 2014];   // Ortsteilgrenzen angepasst
 const SCHRIFT = 'system-ui, -apple-system, "Segoe UI", sans-serif';
 const PLOT_OPTIONEN = { responsive: true, displayModeBar: false };
-const PLOT_HOEHE = 300;                  // Höhe der Plotfläche, in allen Panels gleich
+const PLOT_HOEHE = 225;                  // Höhe der Plotfläche, in allen Panels gleich (passt auf einen Standardmonitor)
 const RAND = { t: 64, b: 24, namen: 170, l: 44, namenLinks: 64, r: 12, farbskala: 52 };
 // Gemessen: 9,5 px je Haltestelle, Zeilenhöhe ca. 9 px. Ab etwa 70° überlappen die Namen nicht mehr.
 const NAMEN_WINKEL = -70;
@@ -692,7 +696,7 @@ function panelsAnlegen(ziel, mitKennzahlen) {
         <button type="button" data-aktion="weg" aria-label="Entfernen" title="Entfernen">✕</button>
       </div>` : "";
     p.innerHTML = `<div class="panel-kopf"><div class="panel-titel"><h3></h3>${werkzeuge}</div><div class="einheit"></div>${mitKennzahlen ? '<div class="kennzahlen"></div>' : ""}</div>`
-                + `<div class="diagramm"></div><p class="unterzeile"></p>`;
+                + `<div class="diagramm"></div><div class="keine-darstellung" hidden></div><p class="unterzeile"></p>`;
     return p;
   }));
   ziel.dataset.ids = ids;
@@ -744,19 +748,30 @@ function zeichneLinie() {
     p.querySelector("h3").textContent = k.titel;
     werkzeugeAktualisieren(p, k, nr);
     const heatmap = zustand.ansicht === "heatmap" && k.typ !== "parteien";
+    // Wahlergebnisse (mehrere Parteien je Haltestelle) lassen sich nicht als Heatmap zeigen
+    const keineDarstellung = zustand.ansicht === "heatmap" && k.typ === "parteien";
     const stand = heatmap ? `alle Zeitpunkte · Kennzahlen: Stand ${r.z[i]}`
       : i < 0 ? `kein Wert bis ${zustand.jahr}`
-      : zustand.ansicht === "heatmap" ? `Stand ${r.z[i]} (neueste Wahl)`
+      : keineDarstellung ? "in der Heatmap nicht darstellbar"
       : r.z[i] === String(zustand.jahr) ? `Stand ${r.z[i]}` : `Stand ${r.z[i]} (neuester Wert bis ${zustand.jahr})`;
     p.querySelector(".einheit").textContent = `${k.einheit} · ${stand}`;
-    p.querySelector(".kennzahlen").replaceChildren(...kennzahlenZeile(k).map(([t, w]) => {
+    p.querySelector(".kennzahlen").replaceChildren(...(keineDarstellung ? [] : kennzahlenZeile(k)).map(([t, w]) => {
       const s = document.createElement("span");
       s.append(t + ": ", Object.assign(document.createElement("b"), { textContent: w }));
       return s;
     }));
-    p.querySelector(".unterzeile").textContent = k.typ === "parteien" && zustand.ansicht === "heatmap"
-      ? "Für Wahlergebnisse gibt es keine Heatmap, gezeigt ist die neueste Wahl." : "";
-    panelLinie(k, nr, p.querySelector(".diagramm"));
+    p.querySelector(".unterzeile").textContent = "";
+    const div = p.querySelector(".diagramm"), hinweis = p.querySelector(".keine-darstellung");
+    div.hidden = keineDarstellung;
+    hinweis.hidden = !keineDarstellung;
+    if (keineDarstellung) {
+      // Platzhalter so hoch wie die Plotfläche der anderen Diagramme
+      hinweis.style.height = `${PLOT_HOEHE + RAND.t + (nr === 0 ? RAND.namen : RAND.b)}px`;
+      hinweis.textContent = "Keine Darstellung möglich: Wahlergebnisse bestehen aus mehreren Parteien je Haltestelle und lassen sich nicht als Heatmap zeigen. Zum Ansehen auf „Ein Zeitpunkt“ wechseln.";
+      div._basis = null;   // nicht an der gemeinsamen Hervorhebung teilnehmen
+    } else {
+      panelLinie(k, nr, div);
+    }
   });
   const [, aktuell] = dunkel() ? ["dunkel", "hell"] : ["hell", "dunkel"];
   el("unter-linie").textContent = zustand.ansicht === "einzeln"
