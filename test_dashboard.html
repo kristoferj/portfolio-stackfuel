@@ -114,6 +114,11 @@
   .k-ot { fill: var(--surface); stroke: var(--axis); stroke-width: 1; transition: fill 0.1s; }
   .k-ot.gewaehlt { stroke: var(--series-1); stroke-width: 1.5; }
   .k-ot.aktiv { fill: var(--accent-wash); }
+  #auswahlkarte { cursor: default; }
+  /* Eigene Ebene über allen Ortsteilen, damit Nachbargrenzen den blauen Rand nicht überdecken */
+  .k-auswahl { fill: none; stroke: var(--series-1); stroke-width: 2; stroke-linejoin: round; pointer-events: none; }
+  #auswahlkarte .k-ot { cursor: pointer; }
+  #auswahlkarte .k-linie, #auswahlkarte .k-halt { pointer-events: none; }
   .k-linie { fill: none; stroke: var(--text-2); stroke-width: 2; stroke-linejoin: round; }
   .k-halt { fill: var(--surface); stroke: var(--text-2); stroke-width: 1; }
   .k-markiert { fill: var(--series-1); stroke: var(--surface); stroke-width: 2; }
@@ -122,6 +127,15 @@
   .panels { display: grid; grid-template-columns: repeat(var(--n, 1), minmax(0, 1fr)); gap: 0 16px; }
   .panel { min-width: 0; }
   .panel-kopf { min-height: 92px; }
+  .panel-titel { display: flex; flex-wrap: wrap; gap: 4px 8px; justify-content: space-between; align-items: center; }
+  .werkzeuge { display: flex; gap: 4px; align-items: center; }
+  .werkzeuge select { padding: 2px 4px; font-size: 12px; border-radius: 6px; max-width: 150px; }
+  .werkzeuge button {
+    width: 26px; height: 26px; padding: 0; border: 1px solid var(--axis); border-radius: 6px;
+    background: var(--surface); cursor: pointer; font-size: 12px; line-height: 1; color: var(--text-2);
+  }
+  .werkzeuge button:hover:not(:disabled) { background: var(--band); color: var(--text-1); }
+  .werkzeuge button:disabled { opacity: 0.35; cursor: default; }
   .panel-kopf .einheit { color: var(--text-2); font-size: 13px; }
   .kennzahlen { display: flex; flex-wrap: wrap; gap: 2px 14px; font-size: 13px; color: var(--text-2); margin-top: 4px; }
   .kennzahlen b { color: var(--text-1); font-weight: 600; }
@@ -211,15 +225,19 @@
   </section>
 
   <section class="karte">
-    <header>
+    <header class="mit-karte">
       <div>
         <h2 id="titel-zeit"></h2>
         <p>im Vergleich zur Gesamtstadt, wenn vergleichbar</p>
       </div>
-      <div class="feld">
-        <label for="ortsteil">Ortsteil (oder Haltestelle oben anklicken)</label>
-        <select id="ortsteil"></select>
-      </div>
+      <figure class="minikarte">
+        <svg id="auswahlkarte" role="img" aria-label="Karte zur Auswahl des Ortsteils"></svg>
+        <figcaption id="auswahlkarte-text">Ortsteil per Klick auf die Karte wählen.</figcaption>
+        <div class="feld">
+          <label for="ortsteil">oder aus der Liste</label>
+          <select id="ortsteil"></select>
+        </div>
+      </figure>
     </header>
     <div class="panels" id="panels-zeit"></div>
   </section>
@@ -519,13 +537,12 @@ function karteHover(i) {
   });
 }
 
-// i = Haltestelle unter der Maus oder null. Der Ortsteil der Zeitdiagramme bleibt umrandet.
+// i = Haltestelle unter der Maus oder null
 function aktualisiereMinikarte(i) {
   kartenteile.aktuell = i;
   const s = i === null ? null : D.stops[i];
   Object.entries(kartenteile.ortsteile).forEach(([name, e]) => {
     e.classList.toggle("aktiv", !!s && s.ortsteil === name);
-    e.classList.toggle("gewaehlt", name === zustand.ot);
   });
   const m = kartenteile.marker;
   if (s) {
@@ -538,8 +555,49 @@ function aktualisiereMinikarte(i) {
   if (s) {
     text.replaceChildren(Object.assign(document.createElement("b"), { textContent: s.name }), ` · ${s.ortsteil}`);
   } else {
-    text.textContent = `Linie ${D.linie}: ${D.stops[0].name} → ${D.stops[D.stops.length - 1].name}. Blau umrandet: ${zustand.ot}.`;
+    text.textContent = `Linie ${D.linie}: ${D.stops[0].name} → ${D.stops[D.stops.length - 1].name}`;
   }
+}
+
+// ---------- Auswahlkarte für "über die Zeit" ----------
+
+// Gleiche Grundkarte wie oben (Ausschnitt Linie), die Ortsteile entlang der Linie sind anklickbar.
+// Reihenfolge der Ebenen: Hintergrund, Ortsteile, Rand des gewählten Ortsteils, Straßenbahnlinie.
+const auswahlUmriss = { pfade: {}, element: null };
+
+function zeichneAuswahlkarte() {
+  const K = D.karte, svg = el("auswahlkarte");
+  svg.setAttribute("viewBox", K.ausschnitt.join(" "));
+  const pfad = ringe => ringe.map(r => "M" + r.map(p => p.join(",")).join("L") + "Z").join("");
+  const [ax, ay, ab, ah] = K.ausschnitt;
+  svg.append(svgElement("rect", { x: ax, y: ay, width: ab, height: ah, class: "k-hintergrund" }));
+  svg.append(svgElement("path", { d: pfad(K.stadt), class: "k-stadt" }));
+  Object.entries(K.ortsteile).forEach(([name, ringe]) => {
+    auswahlUmriss.pfade[name] = pfad(ringe);
+    const e = svgElement("path", { d: pfad(ringe), class: "k-ot", "data-name": name });
+    e.append(Object.assign(svgElement("title", {}), { textContent: name }));
+    e.addEventListener("mouseenter", () => {
+      e.classList.add("aktiv");
+      el("auswahlkarte-text").replaceChildren("Klicken für ", Object.assign(document.createElement("b"), { textContent: name }));
+    });
+    e.addEventListener("mouseleave", () => { e.classList.remove("aktiv"); aktualisiereAuswahlkarte(); });
+    e.addEventListener("click", () => {
+      zustand.ot = name;
+      el("ortsteil").value = name;
+      zeichneZeit();
+    });
+    svg.append(e);
+  });
+  auswahlUmriss.element = svgElement("path", { d: "", class: "k-auswahl" });
+  svg.append(auswahlUmriss.element);
+  svg.append(svgElement("polyline", { points: K.stops.map(p => p.join(",")).join(" "), class: "k-linie" }));
+  K.stops.forEach(([x, y]) => svg.append(svgElement("circle", { cx: x, cy: y, r: 90, class: "k-halt" })));
+}
+
+function aktualisiereAuswahlkarte() {
+  auswahlUmriss.element.setAttribute("d", auswahlUmriss.pfade[zustand.ot] || "");
+  el("auswahlkarte-text").replaceChildren("Gewählt: ", Object.assign(document.createElement("b"), { textContent: zustand.ot }),
+                                          ". Anderen Ortsteil per Klick auf die Karte wählen.");
 }
 
 // Hebt eine Haltestelle in allen Panels hervor: heller Streifen, Name fett.
@@ -627,11 +685,50 @@ function panelsAnlegen(ziel, mitKennzahlen) {
   ziel.replaceChildren(...zustand.auswahl.map(() => {
     const p = document.createElement("div");
     p.className = "panel";
-    p.innerHTML = `<div class="panel-kopf"><h3></h3><div class="einheit"></div>${mitKennzahlen ? '<div class="kennzahlen"></div>' : ""}</div>`
+    const werkzeuge = mitKennzahlen ? `<div class="werkzeuge">
+        <select aria-label="Kennzahl ersetzen"></select>
+        <button type="button" data-aktion="links" aria-label="Nach links verschieben" title="Nach links verschieben">◀</button>
+        <button type="button" data-aktion="rechts" aria-label="Nach rechts verschieben" title="Nach rechts verschieben">▶</button>
+        <button type="button" data-aktion="weg" aria-label="Entfernen" title="Entfernen">✕</button>
+      </div>` : "";
+    p.innerHTML = `<div class="panel-kopf"><div class="panel-titel"><h3></h3>${werkzeuge}</div><div class="einheit"></div>${mitKennzahlen ? '<div class="kennzahlen"></div>' : ""}</div>`
                 + `<div class="diagramm"></div><p class="unterzeile"></p>`;
     return p;
   }));
   ziel.dataset.ids = ids;
+}
+
+// Position nr: ersetzen, verschieben oder entfernen. Die Panels werden danach neu angelegt.
+function werkzeugeAktualisieren(p, k, nr) {
+  const w = p.querySelector(".werkzeuge");
+  const auswahl = w.querySelector("select");
+  const belegt = new Set(zustand.auswahl.map(x => x.id));
+  auswahl.replaceChildren(...[...new Set(D.kennzahlen.map(x => x.thema))].map(t => {
+    const g = document.createElement("optgroup");
+    g.label = t;
+    D.kennzahlen.filter(x => x.thema === t).forEach(x => {
+      const o = new Option(x.titel + (x.umfrage ? " *" : ""), x.id, false, x.id === k.id);
+      o.disabled = belegt.has(x.id) && x.id !== k.id;   // schon in einem anderen Diagramm
+      g.append(o);
+    });
+    return g;
+  }));
+  w.querySelector('[data-aktion="links"]').disabled = nr === 0;
+  w.querySelector('[data-aktion="rechts"]').disabled = nr === zustand.auswahl.length - 1;
+  if (w._verdrahtet) return;
+  w._verdrahtet = true;
+  // nr aus der aktuellen Position im DOM lesen, nicht aus der Closure (Panels werden neu sortiert)
+  const position = () => [...p.parentElement.children].indexOf(p);
+  auswahl.addEventListener("change", () => { zustand.auswahl[position()] = kennzahl(auswahl.value); alles(); });
+  w.addEventListener("click", ev => {
+    const aktion = ev.target.closest("button")?.dataset.aktion;
+    if (!aktion) return;
+    const i = position(), a = zustand.auswahl;
+    if (aktion === "links" && i > 0) [a[i - 1], a[i]] = [a[i], a[i - 1]];
+    if (aktion === "rechts" && i < a.length - 1) [a[i + 1], a[i]] = [a[i], a[i + 1]];
+    if (aktion === "weg") a.splice(i, 1);
+    alles();
+  });
 }
 
 function zeichneLinie() {
@@ -645,6 +742,7 @@ function zeichneLinie() {
   zustand.auswahl.forEach((k, nr) => {
     const p = ziel.children[nr], r = reihe(k), i = zeitIndex(k);
     p.querySelector("h3").textContent = k.titel;
+    werkzeugeAktualisieren(p, k, nr);
     const heatmap = zustand.ansicht === "heatmap" && k.typ !== "parteien";
     const stand = heatmap ? `alle Zeitpunkte · Kennzahlen: Stand ${r.z[i]}`
       : i < 0 ? `kein Wert bis ${zustand.jahr}`
@@ -662,7 +760,7 @@ function zeichneLinie() {
   });
   const [, aktuell] = dunkel() ? ["dunkel", "hell"] : ["hell", "dunkel"];
   el("unter-linie").textContent = zustand.ansicht === "einzeln"
-    ? "Alle Diagramme folgen der Linie von Grünau-Nord (links) nach Paunsdorf Nord (rechts). Haltestellennamen stehen unter dem ersten Diagramm. Beim Darüberfahren wird die Haltestelle in allen Diagrammen hervorgehoben. Jedes Diagramm hat seine eigene Skala. Graue Linie: Wert der Gesamtstadt, wenn vergleichbar."
+    ? "Alle Diagramme folgen der Linie von Grünau-Nord (links) nach Paunsdorf Nord (rechts). Mit ◀ ▶ lassen sich Diagramme verschieben, über die Auswahlliste ersetzen. Haltestellennamen stehen unter dem ersten Diagramm. Beim Darüberfahren wird die Haltestelle in allen Diagrammen hervorgehoben. Jedes Diagramm hat seine eigene Skala. Graue Linie: Wert der Gesamtstadt, wenn vergleichbar."
     : `Jede Zeile ein Zeitpunkt, neueste oben. Einfarbig: ${aktuell} = hoher Wert. Hitze: rot = wärmer, blau = kühler als das Stadtmittel.`;
 }
 
@@ -752,7 +850,7 @@ function panelZeit(k, div, hinweis) {
 
 function zeichneZeit() {
   el("titel-zeit").textContent = `${zustand.ot} über die Zeit`;
-  if (kartenteile.marker) aktualisiereMinikarte(kartenteile.aktuell ?? null);
+  if (el("auswahlkarte").childElementCount) aktualisiereAuswahlkarte();
   const ziel = el("panels-zeit");
   if (!zustand.auswahl.length) { ziel.replaceChildren(); ziel.dataset.ids = ""; return; }
   panelsAnlegen(ziel, false);
@@ -878,6 +976,7 @@ let startAuswahl = (start.get("auswahl") || "").split(",").map(kennzahl).filter(
 if (!startAuswahl.length) startAuswahl = ["sgb2_quote"].map(kennzahl).filter(Boolean);   // Standard beim Öffnen
 zustand.auswahl = startAuswahl;
 zeichneMinikarte();
+zeichneAuswahlkarte();
 el("minikarte").addEventListener("mousemove", ev => {
   const i = haltestelleAnMaus(ev);
   if (i !== kartenteile.aktuell) karteHover(i);
