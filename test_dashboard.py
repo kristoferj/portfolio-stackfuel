@@ -80,6 +80,8 @@ def strecke_bestimmen() -> pd.DataFrame:
     return pd.DataFrame({
         "name": strecke["stop_name"].str.replace("Leipzig, ", "", regex=False),
         "ortsteil": strecke["Name"],
+        "x": strecke.geometry.x,
+        "y": strecke.geometry.y,
     }).reset_index(drop=True)
 
 
@@ -172,6 +174,41 @@ def daten_zusammenstellen(strecke: pd.DataFrame) -> dict:
 
 
 # ============================================================
+# 3. Minikarte: Stadtgrenze, Ortsteile entlang der Linie, Haltestellen
+# ============================================================
+
+VEREINFACHUNG_M = 25   # Umrisse vereinfachen, bei 300 px Kartenbreite sind 25 m nicht sichtbar
+KARTENRAND_M = 700     # Abstand des Kartenausschnitts um die Ortsteile der Linie
+
+
+def karte_zusammenstellen(strecke: pd.DataFrame) -> dict:
+    """Koordinaten in Metern, verschoben auf (0, 0) oben links, y nach unten wie im SVG."""
+    ortsteile = gpd.read_file(RAW / "geodaten/ortsteile.geojson")
+    stadt = ortsteile.union_all().simplify(VEREINFACHUNG_M)
+    x0, _, _, y1 = stadt.bounds
+
+    def ring(r):
+        return [[round(x - x0), round(y1 - y)] for x, y in r.coords]
+
+    def flaeche(geom):
+        teile = geom.geoms if geom.geom_type == "MultiPolygon" else [geom]
+        return [ring(t.exterior) for t in teile]   # Löcher spielen bei dieser Größe keine Rolle
+
+    entlang = ortsteile[ortsteile["Name"].isin(strecke["ortsteil"])]
+    # Ausschnitt: nur die Ortsteile entlang der Linie, die Stadtgrenze ist angeschnitten als Orientierung sichtbar
+    minx, miny, maxx, maxy = entlang.total_bounds
+    sx0, sy0, sx1, sy1 = stadt.bounds
+    return {
+        "ausschnitt_stadt": [-KARTENRAND_M, -KARTENRAND_M, round(sx1 - sx0 + 2 * KARTENRAND_M), round(sy1 - sy0 + 2 * KARTENRAND_M)],
+        "ausschnitt": [round(minx - x0 - KARTENRAND_M), round(y1 - maxy - KARTENRAND_M),
+                       round(maxx - minx + 2 * KARTENRAND_M), round(maxy - miny + 2 * KARTENRAND_M)],
+        "stadt": flaeche(stadt),
+        "ortsteile": {name: flaeche(g.simplify(VEREINFACHUNG_M)) for name, g in zip(entlang["Name"], entlang.geometry)},
+        "stops": [[round(x - x0), round(y1 - y)] for x, y in zip(strecke["x"], strecke["y"])],
+    }
+
+
+# ============================================================
 # ABLAUF
 # ============================================================
 
@@ -180,6 +217,7 @@ def main() -> None:
     print(f"Linie {LINIE}: {len(strecke)} Haltestellen, {strecke['ortsteil'].nunique()} Ortsteile")
 
     inhalt = daten_zusammenstellen(strecke)
+    inhalt["karte"] = karte_zusammenstellen(strecke)
     html = VORLAGE.read_text(encoding="utf-8").replace(
         "/*DATEN*/null", json.dumps(inhalt, ensure_ascii=False, separators=(",", ":"))
     )

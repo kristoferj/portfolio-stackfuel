@@ -91,6 +91,32 @@
   }
   .karte > header { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-between; align-items: end; margin-bottom: 12px; }
   .karte > header p { color: var(--text-2); font-size: 13px; }
+  .karte > header.mit-karte { align-items: flex-start; flex-wrap: nowrap; }
+  .karte > header.mit-karte > div { max-width: 70ch; }
+  @media (max-width: 700px) { .karte > header.mit-karte { flex-wrap: wrap; } }
+
+  /* Minikarte: schematisch, ohne Kartenhintergrund. Strichstärken unabhängig vom Maßstab. */
+  .minikarte { margin: 0; width: 340px; max-width: 100%; flex: none; }
+  .minikarte svg { width: 100%; height: auto; display: block; cursor: crosshair; }
+  .minikarte.ganz { width: 240px; }
+  .karten-ausschnitt { display: inline-flex; border: 1px solid var(--axis); border-radius: 6px; overflow: hidden; font-size: 12px; }
+  .karten-ausschnitt button { padding: 2px 10px; border: 0; background: var(--surface); cursor: pointer; border-left: 1px solid var(--axis); }
+  .karten-ausschnitt button:first-child { border-left: 0; }
+  .karten-ausschnitt button[aria-pressed="true"] { background: var(--accent-wash); font-weight: 600; }
+  .minikarte svg * { vector-effect: non-scaling-stroke; }
+  .minikarte figcaption { font-size: 12px; color: var(--text-2); min-height: 2.8em; margin-top: 4px; }
+  .minikarte figcaption b { color: var(--text-1); }
+  .k-stadt { fill: var(--band); stroke: var(--axis); stroke-width: 1; }
+  /* Linien-Ansicht: alles außer den Ortsteilen der Linie grau, auch außerhalb der Stadt, ohne Stadtgrenze */
+  .k-hintergrund { fill: var(--band); }
+  .minikarte.ganz .k-hintergrund { display: none; }
+  .minikarte:not(.ganz) .k-stadt { stroke: none; }
+  .k-ot { fill: var(--surface); stroke: var(--axis); stroke-width: 1; transition: fill 0.1s; }
+  .k-ot.gewaehlt { stroke: var(--series-1); stroke-width: 1.5; }
+  .k-ot.aktiv { fill: var(--accent-wash); }
+  .k-linie { fill: none; stroke: var(--text-2); stroke-width: 2; stroke-linejoin: round; }
+  .k-halt { fill: var(--surface); stroke: var(--text-2); stroke-width: 1; }
+  .k-markiert { fill: var(--series-1); stroke: var(--surface); stroke-width: 2; }
 
   /* Panels nebeneinander, auf schmalen Bildschirmen untereinander */
   .panels { display: grid; grid-template-columns: repeat(var(--n, 1), minmax(0, 1fr)); gap: 0 16px; }
@@ -163,11 +189,19 @@
   </div>
 
   <section class="karte">
-    <header>
+    <header class="mit-karte">
       <div>
         <h2>Entlang der Linie 8</h2>
         <p id="unter-linie"></p>
       </div>
+      <figure class="minikarte">
+        <svg id="minikarte" role="img" aria-label="Karte von Leipzig mit der Linie 8 und der aktuellen Haltestelle"></svg>
+        <figcaption id="minikarte-text"></figcaption>
+        <div class="karten-ausschnitt" role="group" aria-label="Kartenausschnitt">
+          <button type="button" data-ausschnitt="linie" aria-pressed="true">Linie</button>
+          <button type="button" data-ausschnitt="stadt" aria-pressed="false">Ganz Leipzig</button>
+        </div>
+      </figure>
     </header>
     <div class="panels" id="panels-linie"></div>
     <details>
@@ -424,9 +458,94 @@ function panelLinie(k, nr, div) {
   }
 }
 
+// ---------- Minikarte ----------
+
+const SVG_NS = "http://www.w3.org/2000/svg";
+const kartenteile = { ortsteile: {}, marker: null, aktuell: undefined };
+
+function svgElement(name, attribute) {
+  const e = document.createElementNS(SVG_NS, name);
+  Object.entries(attribute).forEach(([k, v]) => e.setAttribute(k, v));
+  return e;
+}
+
+function zeichneMinikarte() {
+  const K = D.karte, svg = el("minikarte");
+  setzeAusschnitt("linie");
+  const pfad = ringe => ringe.map(r => "M" + r.map(p => p.join(",")).join("L") + "Z").join("");
+  const [ax, ay, ab, ah] = K.ausschnitt;
+  svg.append(svgElement("rect", { x: ax, y: ay, width: ab, height: ah, class: "k-hintergrund" }));
+  svg.append(svgElement("path", { d: pfad(K.stadt), class: "k-stadt" }));
+  Object.entries(K.ortsteile).forEach(([name, ringe]) => {
+    const e = svgElement("path", { d: pfad(ringe), class: "k-ot" });
+    e.append(Object.assign(svgElement("title", {}), { textContent: name }));
+    kartenteile.ortsteile[name] = e;
+    svg.append(e);
+  });
+  svg.append(svgElement("polyline", { points: K.stops.map(p => p.join(",")).join(" "), class: "k-linie" }));
+  K.stops.forEach(([x, y]) => svg.append(svgElement("circle", { cx: x, cy: y, r: 90, class: "k-halt" })));
+  kartenteile.marker = svgElement("circle", { cx: 0, cy: 0, r: 260, class: "k-markiert", visibility: "hidden" });
+  svg.append(kartenteile.marker);
+  aktualisiereMinikarte(null);
+}
+
+// Ausschnitt: nur die Ortsteile entlang der Linie oder die ganze Stadt
+function setzeAusschnitt(art) {
+  el("minikarte").setAttribute("viewBox", (art === "stadt" ? D.karte.ausschnitt_stadt : D.karte.ausschnitt).join(" "));
+  el("minikarte").closest(".minikarte").classList.toggle("ganz", art === "stadt");
+  document.querySelectorAll(".karten-ausschnitt button").forEach(b => b.setAttribute("aria-pressed", b.dataset.ausschnitt === art));
+}
+
+// Nächstgelegene Haltestelle zur Mausposition auf der Karte (Koordinaten in Metern)
+function haltestelleAnMaus(ev) {
+  const svg = el("minikarte"), p = svg.createSVGPoint();
+  p.x = ev.clientX; p.y = ev.clientY;
+  const m = p.matrixTransform(svg.getScreenCTM().inverse());
+  let beste = null, abstand = Infinity;
+  D.karte.stops.forEach(([x, y], i) => {
+    const d = Math.hypot(x - m.x, y - m.y);
+    if (d < abstand) { abstand = d; beste = i; }
+  });
+  return abstand <= 1500 ? beste : null;   // weiter als 1,5 km von der Linie entfernt: keine Haltestelle
+}
+
+// Hover auf der Karte: Haltestelle in allen Diagrammen hervorheben und in den Liniendiagrammen den Tooltip zeigen
+function karteHover(i) {
+  markiereHaltestelle(i);
+  document.querySelectorAll("#panels-linie .diagramm").forEach(div => {
+    if (!div._basis || div._wahl) return;
+    if (i === null || zustand.ansicht === "heatmap") Plotly.Fx.unhover(div);
+    else Plotly.Fx.hover(div, [{ curveNumber: 0, pointNumber: i }]);
+  });
+}
+
+// i = Haltestelle unter der Maus oder null. Der Ortsteil der Zeitdiagramme bleibt umrandet.
+function aktualisiereMinikarte(i) {
+  kartenteile.aktuell = i;
+  const s = i === null ? null : D.stops[i];
+  Object.entries(kartenteile.ortsteile).forEach(([name, e]) => {
+    e.classList.toggle("aktiv", !!s && s.ortsteil === name);
+    e.classList.toggle("gewaehlt", name === zustand.ot);
+  });
+  const m = kartenteile.marker;
+  if (s) {
+    const [x, y] = D.karte.stops[i];
+    m.setAttribute("cx", x); m.setAttribute("cy", y); m.setAttribute("visibility", "visible");
+  } else {
+    m.setAttribute("visibility", "hidden");
+  }
+  const text = el("minikarte-text");
+  if (s) {
+    text.replaceChildren(Object.assign(document.createElement("b"), { textContent: s.name }), ` · ${s.ortsteil}`);
+  } else {
+    text.textContent = `Linie ${D.linie}: ${D.stops[0].name} → ${D.stops[D.stops.length - 1].name}. Blau umrandet: ${zustand.ot}.`;
+  }
+}
+
 // Hebt eine Haltestelle in allen Panels hervor: heller Streifen, Name fett.
 // Im ersten Panel wird die Achsenbeschriftung fett, in den anderen erscheint der Name unter der Achse.
 function markiereHaltestelle(i) {
+  if (kartenteile.aktuell !== i) aktualisiereMinikarte(i);
   document.querySelectorAll("#panels-linie .diagramm").forEach(div => {
     const b = div._basis;
     if (!b || div._markiert === i) return;
@@ -633,6 +752,7 @@ function panelZeit(k, div, hinweis) {
 
 function zeichneZeit() {
   el("titel-zeit").textContent = `${zustand.ot} über die Zeit`;
+  if (kartenteile.marker) aktualisiereMinikarte(kartenteile.aktuell ?? null);
   const ziel = el("panels-zeit");
   if (!zustand.auswahl.length) { ziel.replaceChildren(); ziel.dataset.ids = ""; return; }
   panelsAnlegen(ziel, false);
@@ -757,6 +877,20 @@ const start = new URLSearchParams(location.hash.slice(1));
 let startAuswahl = (start.get("auswahl") || "").split(",").map(kennzahl).filter(Boolean).slice(0, MAX_AUSWAHL);
 if (!startAuswahl.length) startAuswahl = ["sgb2_quote"].map(kennzahl).filter(Boolean);   // Standard beim Öffnen
 zustand.auswahl = startAuswahl;
+zeichneMinikarte();
+el("minikarte").addEventListener("mousemove", ev => {
+  const i = haltestelleAnMaus(ev);
+  if (i !== kartenteile.aktuell) karteHover(i);
+});
+el("minikarte").addEventListener("mouseleave", () => karteHover(null));
+el("minikarte").addEventListener("click", ev => {
+  const i = haltestelleAnMaus(ev);
+  if (i === null) return;
+  zustand.ot = D.stops[i].ortsteil;
+  el("ortsteil").value = zustand.ot;
+  zeichneZeit();
+});
+document.querySelectorAll(".karten-ausschnitt button").forEach(b => b.addEventListener("click", () => setzeAusschnitt(b.dataset.ausschnitt)));
 if (["einzeln", "heatmap"].includes(start.get("ansicht"))) {
   zustand.ansicht = start.get("ansicht");
   document.querySelectorAll(".ansicht button").forEach(b => b.setAttribute("aria-pressed", b.dataset.ansicht === zustand.ansicht));
