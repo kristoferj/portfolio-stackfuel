@@ -60,6 +60,7 @@
   /* Auswahl der Kennzahlen: Schalter nach Thema */
   .waehler { margin: 20px 0 12px; display: grid; gap: 8px; }
   .waehler-kopf { font-size: 13px; color: var(--text-2); }
+  .waehler-legende { font-size: 12px; color: var(--muted); }
   .themen { display: flex; flex-wrap: wrap; gap: 6px 18px; }
   .thema { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
   .thema > span { font-size: 12px; color: var(--muted); margin-right: 2px; }
@@ -140,6 +141,7 @@
   <div class="waehler">
     <div class="waehler-kopf" id="waehler-kopf"></div>
     <div class="themen" id="themen"></div>
+    <div class="waehler-legende">* beruht auf der Kommunalen Bürgerumfrage: eine Stichprobe, nur alle zwei Jahre erhoben, Werte je Ortsteil schwanken stärker</div>
   </div>
 
   <div class="filter">
@@ -654,6 +656,7 @@ function zeichneFussnoten() {
   if (hat(k => k.thema === "Bevölkerung")) noten.push("Einwohner sind Personen mit Hauptwohnsitz. Nebenwohnsitze zählen nicht mit.");
   if (hat(amtlicheJahresdaten)) noten.push("Die Grenzen einiger Ortsteile wurden 2006, 2012 und 2014 angepasst. Werte davor beziehen sich teils auf den alten Zuschnitt.");
   if (hat(k => k.umfrage)) noten.push("Einkommen, Hochschulabschluss, Miete und Lebenszufriedenheit beruhen auf der Kommunalen Bürgerumfrage: eine Stichprobe, nur alle zwei Jahre. Pro Ortsteil antworten wenige Menschen, deshalb schwanken die Werte.");
+  if (hat(k => k.id === "migration")) noten.push("Migrationshintergrund: Anteil der Einwohner, die keine deutsche Staatsangehörigkeit haben oder als Deutsche einen Migrationshintergrund haben (Eingebürgerte, Spätaussiedler, Deutsche mit weiterer Staatsangehörigkeit, Kinder mit mindestens einem zugewanderten Elternteil). Ermittelt aus dem Einwohnerregister. Die Quelle nennt das Merkmal „Migrantenanteil“; es umfasst aber auch in Deutschland Geborene, die selbst nie eingewandert sind. Nicht zu verwechseln mit „Einwanderungsgeschichte“ (seit 2023 beim Statistischen Bundesamt), die enger gefasst ist.");
   if (hat(k => k.id === "zufriedenheit")) noten.push("Lebenszufriedenheit ist eine Durchschnittsnote aus der Bürgerumfrage: Je niedriger, desto zufriedener.");
   if (hat(k => k.id === "straftaten")) noten.push("Straftaten werden am Tatort gezählt, aber auf die Einwohner bezogen. In der Innenstadt mit wenigen Einwohnern und vielen Besuchern ergeben sich deshalb sehr hohe Werte (Zentrum: rund 2.800 je 1.000 Einwohner).");
   if (hat(k => k.typ === "parteien")) noten.push("Bundestagswahl: „DIE LINKE“ umfasst bis 2005 die Vorgänger PDS bzw. Linkspartei.PDS. „Sonstige“ ist der Rest zu 100 % und enthält alle Parteien, die die Quelle nicht einzeln ausweist. Fehlt eine Partei, ist sie nicht angetreten.");
@@ -752,7 +755,7 @@ matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
 // Startzustand, optional über die Adresse: #auswahl=sgb2_quote,hitze,bundestagswahl&ansicht=einzeln&jahr=2025
 const start = new URLSearchParams(location.hash.slice(1));
 let startAuswahl = (start.get("auswahl") || "").split(",").map(kennzahl).filter(Boolean).slice(0, MAX_AUSWAHL);
-if (!startAuswahl.length) startAuswahl = ["sgb2_quote", "hitze", "bundestagswahl"].map(kennzahl).filter(Boolean);
+if (!startAuswahl.length) startAuswahl = ["sgb2_quote"].map(kennzahl).filter(Boolean);   // Standard beim Öffnen
 zustand.auswahl = startAuswahl;
 if (["einzeln", "heatmap"].includes(start.get("ansicht"))) {
   zustand.ansicht = start.get("ansicht");
