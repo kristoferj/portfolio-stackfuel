@@ -37,6 +37,7 @@
     }
   }
   * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
   body {
     margin: 0;
     background: var(--page);
@@ -80,6 +81,7 @@
   .zeit { flex: 1 1 260px; }
   .zeit-zeile { display: flex; gap: 12px; align-items: center; }
   .zeit input { flex: 1; min-width: 120px; accent-color: var(--series-1); }
+  .heatmap-hinweis { color: var(--text-2); font-size: 13px; padding-bottom: 8px; max-width: 60ch; }
   .zeit output { font-weight: 600; font-variant-numeric: tabular-nums; min-width: 5ch; text-align: right; }
 
   .karte {
@@ -135,13 +137,14 @@
         <button type="button" data-ansicht="heatmap" aria-pressed="false">Heatmap</button>
       </div>
     </div>
-    <div class="feld zeit">
-      <label for="zeit">Jahr</label>
+    <div class="feld zeit" id="zeit-feld">
+      <label for="zeit">Jahr für „Ein Zeitpunkt“</label>
       <div class="zeit-zeile">
         <input type="range" id="zeit" min="0" max="0" step="1" value="0">
         <output id="zeit-anzeige" for="zeit"></output>
       </div>
     </div>
+    <p class="heatmap-hinweis" id="heatmap-hinweis" hidden>Die Heatmap zeigt alle Jahre auf einmal. Zur Auswahl eines Jahres auf „Ein Zeitpunkt“ wechseln.</p>
   </div>
 
   <section class="karte">
@@ -205,8 +208,8 @@ const PARTEIFARBEN = {
 const GRENZJAHRE = [2006, 2012, 2014];   // Ortsteilgrenzen angepasst
 const SCHRIFT = 'system-ui, -apple-system, "Segoe UI", sans-serif';
 const PLOT_OPTIONEN = { responsive: true, displayModeBar: false };
-const ZEILE = 22;                        // Pixel je Haltestelle
-const RAND = { t: 84, b: 36, links: 190, rechts: 150, innen: 10 };
+const PLOT_HOEHE = 300;                  // Höhe der Plotfläche, in allen Panels gleich
+const RAND = { t: 64, b: 12, namen: 150, l: 44, namenLinks: 100, r: 12, farbskala: 52 };
 
 const el = id => document.getElementById(id);
 const dunkel = () => matchMedia("(prefers-color-scheme: dark)").matches;
@@ -229,7 +232,7 @@ function zahl(v) {
 const kennzahl = id => D.kennzahlen.find(k => k.id === id);
 const reihe = k => D.daten[k.id];
 const ortsteile = [...new Set(D.stops.map(s => s.ortsteil))];
-const yStops = D.stops.map((_, i) => i + 1);
+const xStops = D.stops.map((_, i) => i + 1);
 
 // Zusammenhängende Abschnitte der Linie im selben Ortsteil
 const abschnitte = [];
@@ -251,11 +254,14 @@ function jahre() {
   return [...j].sort((a, b) => a - b);
 }
 
+// In der Heatmap gibt es kein gewähltes Jahr, Kennzahlen gelten dort für den neuesten Stand
+const aktivesJahr = () => zustand.ansicht === "heatmap" ? Infinity : zustand.jahr;
+
 // Neuester Zeitpunkt bis zum gewählten Jahr, an dem es entlang der Linie Werte gibt
 function zeitIndex(k) {
   const r = reihe(k);
   for (let i = r.j.length - 1; i >= 0; i--) {
-    if (r.j[i] <= zustand.jahr && ortsteile.some(o => hatWert(k, o, i))) return i;
+    if (r.j[i] <= aktivesJahr() && ortsteile.some(o => hatWert(k, o, i))) return i;
   }
   return -1;
 }
@@ -283,62 +289,57 @@ function grundlayout(hoehe) {
   };
 }
 
-// ---------- Panels entlang der Linie: Haltestellen senkrecht, Werte waagerecht ----------
+// ---------- Panels entlang der Linie: Haltestellen waagerecht, Gipfel und Täler senkrecht ----------
 
-function layoutLinie(nr, anzahl) {
-  const erstes = nr === 0, letztes = nr === anzahl - 1;
-  const layout = grundlayout(D.stops.length * ZEILE + RAND.t + RAND.b);
-  // Feste Ränder: alle Panels gleich hoch, die Haltestellen stehen auf einer Höhe
-  layout.margin = { l: erstes ? RAND.links : RAND.innen, r: letztes ? RAND.rechts : RAND.innen, t: RAND.t, b: RAND.b, autoexpand: false };
-  layout.yaxis = {
-    range: [D.stops.length + 0.5, 0.5], tickvals: yStops, ticktext: D.stops.map(s => s.name),
-    showticklabels: erstes, tickfont: { size: 11, color: farbe("--text-2") }, showgrid: false, zeroline: false,
-    fixedrange: true, automargin: false,
+function layoutLinie(nr) {
+  const erstes = nr === 0;
+  // Nur das erste Panel trägt die Haltestellennamen, die anderen zeigen sie beim Darüberfahren.
+  // Die Plotfläche ist überall gleich hoch und beginnt auf derselben Höhe.
+  const unten = erstes ? RAND.namen : RAND.b;
+  const layout = grundlayout(PLOT_HOEHE + RAND.t + unten);
+  // Schräge Namen ragen nach links unten, deshalb braucht das erste Panel links mehr Platz
+  layout.margin = { l: erstes ? RAND.namenLinks : RAND.l, r: RAND.r, t: RAND.t, b: unten, autoexpand: false };
+  layout.xaxis = {
+    range: [0.5, D.stops.length + 0.5], tickvals: xStops, ticktext: D.stops.map(s => s.name),
+    showticklabels: erstes, tickangle: -55, tickfont: { size: 9, color: farbe("--text-2") },
+    showgrid: false, zeroline: false, linecolor: farbe("--axis"), fixedrange: true, automargin: false,
   };
-  // Ortsteile als Bänder, Namen rechts neben dem letzten Panel
+  layout.yaxis = { gridcolor: farbe("--grid"), zeroline: false, tickfont: { size: 10, color: farbe("--muted") },
+                   fixedrange: true, automargin: false, separatethousands: true, exponentformat: "none" };
+  // Ortsteile als Bänder im Hintergrund, in allen Panels gleich
   abschnitte.forEach((a, i) => {
     if (i % 2 === 1) layout.shapes.push({
-      type: "rect", xref: "paper", yref: "y", x0: 0, x1: 1, y0: a.von - 0.5, y1: a.bis + 0.5,
+      type: "rect", xref: "x", yref: "paper", x0: a.von - 0.5, x1: a.bis + 0.5, y0: 0, y1: 1,
       fillcolor: farbe("--band"), line: { width: 0 }, layer: "below",
-    });
-    if (letztes) layout.annotations.push({
-      xref: "paper", yref: "y", x: 1, y: (a.von + a.bis) / 2, xanchor: "left", yanchor: "middle", xshift: 8,
-      text: a.ortsteil, showarrow: false, font: { size: 11, color: farbe("--text-2") },
     });
   });
   return layout;
 }
 
-function xAchse(extra = {}) {
-  return { side: "top", gridcolor: farbe("--grid"), zeroline: false, tickfont: { size: 10, color: farbe("--muted") },
-           fixedrange: true, automargin: false, separatethousands: true, exponentformat: "none", ...extra };
-}
-
-function panelLinie(k, nr, anzahl, div) {
+function panelLinie(k, nr, div) {
   const r = reihe(k), i = zeitIndex(k);
-  const layout = layoutLinie(nr, anzahl);
+  const layout = layoutLinie(nr);
   let traces;
 
   if (k.typ === "parteien") {
-    // Gestapelte Balken: je Haltestelle 100 % der Stimmen
+    // Gestapelte Säulen: je Haltestelle 100 % der Stimmen
     layout.barmode = "stack";
-    layout.bargap = 0.25;
-    // Achse unten, damit oben Platz für die Legende ist
-    layout.xaxis = xAchse({ side: "bottom", range: [0, 100], ticksuffix: " %", dtick: 25 });
+    layout.bargap = 0.2;
+    layout.yaxis = { ...layout.yaxis, range: [0, 100], ticksuffix: " %", dtick: 25 };
     layout.showlegend = true;
-    layout.legend = { orientation: "h", x: 0, xanchor: "left", y: 1, yanchor: "bottom", traceorder: "normal",
-                      font: { size: 10, color: farbe("--text-2") }, itemwidth: 30 };
+    layout.legend = { orientation: "h", x: 0, xanchor: "left", y: 1.02, yanchor: "bottom", traceorder: "normal",
+                      font: { size: 10, color: farbe("--text-2") } };
     traces = r.parteien.map(p => {
-      const x = D.stops.map(s => i >= 0 ? r.w[p][s.ortsteil][i] : null);
+      const y = D.stops.map(s => i >= 0 ? r.w[p][s.ortsteil][i] : null);
       return {
-        type: "bar", orientation: "h", name: p, x, y: yStops,
+        type: "bar", name: p, x: xStops, y,
         marker: { color: parteifarbe(p), line: { color: farbe("--surface"), width: 1 } },
-        customdata: D.stops.map((s, j) => [s.name, s.ortsteil, x[j] === null ? "nicht angetreten" : zahl(x[j]) + " %"]),
+        customdata: D.stops.map((s, j) => [s.name, s.ortsteil, y[j] === null ? "nicht angetreten" : zahl(y[j]) + " %"]),
         hovertemplate: `<b>${p}</b>: %{customdata[2]}<br>%{customdata[0]} · %{customdata[1]}<extra></extra>`,
       };
     });
   } else if (zustand.ansicht === "heatmap") {
-    const z = D.stops.map(s => r.w[s.ortsteil]);
+    const z = r.z.map((_, t) => D.stops.map(s => r.w[s.ortsteil][t]));
     let skala, extra = {};
     if (divergierend(k)) {
       const stufen = [...DIVERGIEREND.blau, dunkel() ? DIVERGIEREND.mitte.dunkel : DIVERGIEREND.mitte.hell, ...DIVERGIEREND.rot];
@@ -349,45 +350,41 @@ function panelLinie(k, nr, anzahl, div) {
       skala = (dunkel() ? [...RAMPE].reverse() : RAMPE).map((c, j) => [j / (RAMPE.length - 1), c]);
     }
     layout.plot_bgcolor = farbe("--band");
+    layout.margin.r = RAND.farbskala;
     layout.shapes = [];
-    layout.xaxis = { side: "top", type: "category", tickangle: -60, tickfont: { size: 9, color: farbe("--muted") },
-                     showgrid: false, fixedrange: true, automargin: false };
-    // Gewählten Zeitpunkt unten markieren (Position als Spaltennummer, siehe Nr. 18)
-    if (i >= 0) layout.annotations.push({ xref: "x", yref: "paper", x: i, y: 0, yanchor: "top", text: "▴ " + r.z[i],
-                                          showarrow: false, font: { size: 10, color: farbe("--text-1") } });
+    layout.yaxis = { type: "category", tickfont: { size: 9, color: farbe("--muted") }, showgrid: false, fixedrange: true, automargin: false };
     traces = [{
-      type: "heatmap", x: r.z, y: yStops, z, colorscale: skala, ...extra, xgap: 1, ygap: 2, hoverongaps: false,
-      customdata: z.map((zeile, s) => zeile.map(v => [D.stops[s].name, D.stops[s].ortsteil, zahl(v)])),
-      hovertemplate: "<b>%{x}</b> · %{customdata[0]}<br>Ortsteil %{customdata[1]}<br>%{customdata[2]}<extra></extra>",
-      colorbar: { orientation: "h", thickness: 8, outlinewidth: 0, len: 0.8, x: 0.5, xanchor: "center", y: -0.01, yanchor: "top",
+      type: "heatmap", x: xStops, y: r.z, z, colorscale: skala, ...extra, xgap: 1, ygap: 1, hoverongaps: false,
+      customdata: z.map(zeile => zeile.map((v, s) => [D.stops[s].name, D.stops[s].ortsteil, zahl(v)])),
+      hovertemplate: "<b>%{y}</b> · %{customdata[0]}<br>Ortsteil %{customdata[1]}<br>%{customdata[2]}<extra></extra>",
+      colorbar: { thickness: 8, outlinewidth: 0, len: 1, x: 1.02, xanchor: "left", y: 0.5,
                   tickfont: { size: 9, color: farbe("--muted") }, separatethousands: true, exponentformat: "none" },
     }];
-    layout.margin.b = RAND.b + 26;
   } else {
-    const x = D.stops.map(s => i >= 0 ? r.w[s.ortsteil][i] : null);
-    layout.xaxis = xAchse();
+    const y = D.stops.map(s => i >= 0 ? r.w[s.ortsteil][i] : null);
     traces = [{
-      type: "scatter", mode: "lines+markers", x, y: yStops, connectgaps: false,
-      line: { color: farbe("--series-1"), width: 2, shape: "vhv" },
-      marker: { size: 8, color: farbe("--series-1"), line: { color: farbe("--surface"), width: 2 } },
-      customdata: D.stops.map((s, j) => [s.name, s.ortsteil, zahl(x[j])]),
+      type: "scatter", mode: "lines+markers", x: xStops, y, connectgaps: false,
+      line: { color: farbe("--series-1"), width: 2, shape: "hvh" },
+      marker: { size: 7, color: farbe("--series-1"), line: { color: farbe("--surface"), width: 1.5 } },
+      customdata: D.stops.map((s, j) => [s.name, s.ortsteil, zahl(y[j])]),
       hovertemplate: `<b>%{customdata[0]}</b><br>Ortsteil %{customdata[1]}<br>%{customdata[2]} ${k.einheit}<extra></extra>`,
     }];
     const stadt = i >= 0 ? r.w[D.stadt][i] : null;
-    if (vergleichbar(stadt, x)) {
-      layout.shapes.push({ type: "line", xref: "x", yref: "paper", x0: stadt, x1: stadt, y0: 0, y1: 1,
+    if (vergleichbar(stadt, y)) {
+      layout.shapes.push({ type: "line", xref: "paper", yref: "y", x0: 0, x1: 1, y0: stadt, y1: stadt,
                            line: { color: farbe("--muted"), width: 1 } });
-      layout.annotations.push({ xref: "x", yref: "paper", x: stadt, y: 0, yanchor: "top", text: "Stadt " + zahl(stadt),
-                                showarrow: false, font: { size: 10, color: farbe("--text-2") } });
+      // Beschriftung innen über der Linie, damit rechts kein breiter Rand nötig ist
+      layout.annotations.push({ xref: "paper", yref: "y", x: 1, y: stadt, xanchor: "right", yanchor: "bottom",
+                                text: (divergierend(k) ? "Stadtmittel " : "Stadt ") + zahl(stadt), showarrow: false,
+                                font: { size: 10, color: farbe("--text-2") }, bgcolor: farbe("--surface") });
     }
   }
 
-  // Alle Panels gleich hoch halten (die Wahl-Legende braucht keinen Extra-Platz)
-  layout.height = D.stops.length * ZEILE + layout.margin.t + layout.margin.b;
   Plotly.react(div, traces, layout, PLOT_OPTIONEN);
+  // Klick auf eine Haltestelle wählt ihren Ortsteil für die Zeitdiagramme
   if (!div._klick) {
     div.on("plotly_click", ev => {
-      const s = D.stops[Math.round(ev.points[0].y) - 1];
+      const s = D.stops[Math.round(ev.points[0].x) - 1];
       if (!s) return;
       zustand.ot = s.ortsteil;
       el("ortsteil").value = s.ortsteil;
@@ -440,7 +437,10 @@ function zeichneLinie() {
   zustand.auswahl.forEach((k, nr) => {
     const p = ziel.children[nr], r = reihe(k), i = zeitIndex(k);
     p.querySelector("h3").textContent = k.titel;
-    const stand = i < 0 ? `kein Wert bis ${zustand.jahr}`
+    const heatmap = zustand.ansicht === "heatmap" && k.typ !== "parteien";
+    const stand = heatmap ? `alle Zeitpunkte · Kennzahlen: Stand ${r.z[i]}`
+      : i < 0 ? `kein Wert bis ${zustand.jahr}`
+      : zustand.ansicht === "heatmap" ? `Stand ${r.z[i]} (neueste Wahl)`
       : r.z[i] === String(zustand.jahr) ? `Stand ${r.z[i]}` : `Stand ${r.z[i]} (neuester Wert bis ${zustand.jahr})`;
     p.querySelector(".einheit").textContent = `${k.einheit} · ${stand}`;
     p.querySelector(".kennzahlen").replaceChildren(...kennzahlenZeile(k).map(([t, w]) => {
@@ -449,13 +449,13 @@ function zeichneLinie() {
       return s;
     }));
     p.querySelector(".unterzeile").textContent = k.typ === "parteien" && zustand.ansicht === "heatmap"
-      ? "Für Wahlergebnisse gibt es keine Heatmap, hier immer die gewählte Wahl." : "";
-    panelLinie(k, nr, zustand.auswahl.length, p.querySelector(".diagramm"));
+      ? "Für Wahlergebnisse gibt es keine Heatmap, gezeigt ist die neueste Wahl." : "";
+    panelLinie(k, nr, p.querySelector(".diagramm"));
   });
   const [, aktuell] = dunkel() ? ["dunkel", "hell"] : ["hell", "dunkel"];
   el("unter-linie").textContent = zustand.ansicht === "einzeln"
-    ? "Die Haltestellen stehen in allen Diagrammen auf derselben Höhe. Jedes Diagramm hat seine eigene Skala. Graue Linie: Wert der Gesamtstadt, wenn vergleichbar."
-    : `Jede Spalte ein Zeitpunkt. Einfarbig: ${aktuell} = hoher Wert. Hitze: rot = wärmer, blau = kühler als das Stadtmittel. ▴ markiert den gewählten Zeitpunkt.`;
+    ? "Alle Diagramme folgen der Linie von Grünau-Nord (links) nach Paunsdorf Nord (rechts). Haltestellennamen stehen unter dem ersten Diagramm, in den anderen erscheinen sie beim Darüberfahren. Jedes Diagramm hat seine eigene Skala. Graue Linie: Wert der Gesamtstadt, wenn vergleichbar."
+    : `Jede Zeile ein Zeitpunkt, neueste oben. Einfarbig: ${aktuell} = hoher Wert. Hitze: rot = wärmer, blau = kühler als das Stadtmittel.`;
 }
 
 // ---------- Tabelle ----------
@@ -530,7 +530,7 @@ function panelZeit(k, div, hinweis) {
     if (i >= 0) layout.annotations.push({ xref: "x", yref: "y", x: t.x[i], y: t.y[i], xanchor: "left", yanchor: "middle",
       text: `  ${t.name} ${zahl(t.y[i])}`, showarrow: false, font: { size: 10, color: farbe("--text-2") } });
   });
-  layout.shapes.push({ type: "rect", xref: "x", yref: "paper", x0: zustand.jahr - 0.5, x1: zustand.jahr + 0.5, y0: 0, y1: 1,
+  if (zustand.ansicht === "einzeln") layout.shapes.push({ type: "rect", xref: "x", yref: "paper", x0: zustand.jahr - 0.5, x1: zustand.jahr + 0.5, y0: 0, y1: 1,
                        fillcolor: farbe("--band"), line: { width: 0 }, layer: "below" });
   if (amtlicheJahresdaten(k)) {
     const grenzen = GRENZJAHRE.filter(j => j >= r.j[0] && j <= r.j[r.j.length - 1]);
@@ -618,6 +618,8 @@ function hashSchreiben() {
 
 function alles() {
   zeichneWaehler();
+  el("zeit-feld").hidden = zustand.ansicht === "heatmap";
+  el("heatmap-hinweis").hidden = zustand.ansicht !== "heatmap";
   zeitreglerAnpassen();
   zeichneLinie();
   if (zustand.auswahl.length) zeichneTabelle(); else el("tabelle").replaceChildren();
