@@ -111,6 +111,19 @@
   th { color: var(--text-2); font-weight: 600; }
   td.zahl, th.zahl { text-align: right; font-variant-numeric: tabular-nums; }
 
+  .wahl-tooltip {
+    position: fixed; z-index: 10; pointer-events: none; min-width: 260px;
+    background: var(--surface); border: 1px solid var(--axis); border-radius: 8px;
+    padding: 8px 10px; font-size: 12px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+  }
+  .wahl-tooltip .kopf { font-weight: 600; margin-bottom: 4px; }
+  .wahl-tooltip .ort { color: var(--text-2); font-weight: 400; }
+  .wahl-tooltip .zeile { display: grid; grid-template-columns: 72px 110px 1fr; gap: 8px; align-items: center; line-height: 1.6; }
+  /* Balken auf fester Skala 0 bis 100 %, damit Längen auch zwischen Haltestellen vergleichbar bleiben */
+  .wahl-tooltip .spur { height: 8px; background: var(--grid); border-radius: 2px; overflow: hidden; }
+  .wahl-tooltip .balken { display: block; height: 100%; border-radius: 0 2px 2px 0; min-width: 2px; }
+  .wahl-tooltip .wert { font-variant-numeric: tabular-nums; text-align: right; font-weight: 600; }
+  .wahl-tooltip .fuss { color: var(--text-2); margin-top: 4px; border-top: 1px solid var(--grid); padding-top: 4px; }
   .fussnoten { color: var(--text-2); font-size: 13px; }
   .fussnoten h2 { color: var(--text-1); margin-bottom: 8px; }
   .fussnoten ul { margin: 0; padding-left: 18px; }
@@ -180,6 +193,7 @@
     <ul id="fussnoten"></ul>
   </section>
 </main>
+<div class="wahl-tooltip" id="wahl-tooltip" hidden></div>
 
 <script>
 const D = /*DATEN*/null;
@@ -209,7 +223,9 @@ const GRENZJAHRE = [2006, 2012, 2014];   // Ortsteilgrenzen angepasst
 const SCHRIFT = 'system-ui, -apple-system, "Segoe UI", sans-serif';
 const PLOT_OPTIONEN = { responsive: true, displayModeBar: false };
 const PLOT_HOEHE = 300;                  // Höhe der Plotfläche, in allen Panels gleich
-const RAND = { t: 64, b: 12, namen: 150, l: 44, namenLinks: 100, r: 12, farbskala: 52 };
+const RAND = { t: 64, b: 24, namen: 170, l: 44, namenLinks: 64, r: 12, farbskala: 52 };
+// Gemessen: 9,5 px je Haltestelle, Zeilenhöhe ca. 9 px. Ab etwa 70° überlappen die Namen nicht mehr.
+const NAMEN_WINKEL = -70;
 
 const el = id => document.getElementById(id);
 const dunkel = () => matchMedia("(prefers-color-scheme: dark)").matches;
@@ -301,7 +317,7 @@ function layoutLinie(nr) {
   layout.margin = { l: erstes ? RAND.namenLinks : RAND.l, r: RAND.r, t: RAND.t, b: unten, autoexpand: false };
   layout.xaxis = {
     range: [0.5, D.stops.length + 0.5], tickvals: xStops, ticktext: D.stops.map(s => s.name),
-    showticklabels: erstes, tickangle: -55, tickfont: { size: 9, color: farbe("--text-2") },
+    showticklabels: erstes, tickangle: NAMEN_WINKEL, tickfont: { size: 9, color: farbe("--text-2") },
     showgrid: false, zeroline: false, linecolor: farbe("--axis"), fixedrange: true, automargin: false,
   };
   layout.yaxis = { gridcolor: farbe("--grid"), zeroline: false, tickfont: { size: 10, color: farbe("--muted") },
@@ -335,7 +351,7 @@ function panelLinie(k, nr, div) {
         type: "bar", name: p, x: xStops, y,
         marker: { color: parteifarbe(p), line: { color: farbe("--surface"), width: 1 } },
         customdata: D.stops.map((s, j) => [s.name, s.ortsteil, y[j] === null ? "nicht angetreten" : zahl(y[j]) + " %"]),
-        hovertemplate: `<b>${p}</b>: %{customdata[2]}<br>%{customdata[0]} · %{customdata[1]}<extra></extra>`,
+        hoverinfo: "none",   // eigener Tooltip, siehe zeigeWahlTooltip
       };
     });
   } else if (zustand.ansicht === "heatmap") {
@@ -380,9 +396,21 @@ function panelLinie(k, nr, div) {
     }
   }
 
+  // Bei Linie und Säulen reicht es, irgendwo über der Haltestelle zu sein
+  layout.hovermode = zustand.ansicht === "heatmap" && k.typ !== "parteien" ? "closest" : "x";
+  div._basis = { shapes: layout.shapes, annotations: layout.annotations, ticktext: layout.xaxis.ticktext, erstes: nr === 0,
+                 saeulen: k.typ === "parteien" };
+  div._markiert = null;
+  div._wahl = k.typ === "parteien" ? k : null;
   Plotly.react(div, traces, layout, PLOT_OPTIONEN);
   // Klick auf eine Haltestelle wählt ihren Ortsteil für die Zeitdiagramme
   if (!div._klick) {
+    div.on("plotly_hover", ev => {
+      const i = Math.round(ev.points[0].x) - 1;
+      markiereHaltestelle(i);
+      if (div._wahl) zeigeWahlTooltip(div._wahl, i, ev.event.clientX, ev.event.clientY);
+    });
+    div.on("plotly_unhover", () => { markiereHaltestelle(null); el("wahl-tooltip").hidden = true; });
     div.on("plotly_click", ev => {
       const s = D.stops[Math.round(ev.points[0].x) - 1];
       if (!s) return;
@@ -392,6 +420,65 @@ function panelLinie(k, nr, div) {
     });
     div._klick = true;
   }
+}
+
+// Hebt eine Haltestelle in allen Panels hervor: heller Streifen, Name fett.
+// Im ersten Panel wird die Achsenbeschriftung fett, in den anderen erscheint der Name unter der Achse.
+function markiereHaltestelle(i) {
+  document.querySelectorAll("#panels-linie .diagramm").forEach(div => {
+    const b = div._basis;
+    if (!b || div._markiert === i) return;
+    div._markiert = i;
+    const shapes = [...b.shapes], annotations = [...b.annotations];
+    let ticktext = b.ticktext;
+    if (i !== null) {
+      // Säulen füllen die ganze Höhe, ein Streifen dahinter wäre unsichtbar: dort ein Rahmen davor
+      shapes.push(b.saeulen
+        ? { type: "rect", xref: "x", yref: "paper", x0: i + 0.5, x1: i + 1.5, y0: 0, y1: 1,
+            fillcolor: "rgba(0,0,0,0)", line: { color: farbe("--text-1"), width: 2 }, layer: "above" }
+        : { type: "rect", xref: "x", yref: "paper", x0: i + 0.5, x1: i + 1.5, y0: 0, y1: 1,
+            fillcolor: farbe("--accent-wash"), opacity: 0.7, line: { width: 0 }, layer: "below" });
+      if (b.erstes) {
+        ticktext = b.ticktext.map((t, j) => j === i ? `<b>${t}</b>` : t);
+      } else {
+        annotations.push({ xref: "x", yref: "paper", x: i + 1, y: 0, yanchor: "top", yshift: -2,
+                           text: `<b>${D.stops[i].name}</b>`, showarrow: false,
+                           font: { size: 10, color: farbe("--text-1") }, bgcolor: farbe("--surface") });
+      }
+    }
+    Plotly.relayout(div, { shapes, annotations, "xaxis.ticktext": ticktext });
+  });
+}
+
+// Ein Tooltip je Haltestelle: Haltestelle und Ortsteil einmal oben, darunter die Parteien
+// in der Reihenfolge der Säule (oben nach unten), dazu die Wahlbeteiligung.
+function zeigeWahlTooltip(k, i, mausX, mausY) {
+  const r = reihe(k), t = zeitIndex(k), s = D.stops[i], box = el("wahl-tooltip");
+  if (!s || t < 0) { box.hidden = true; return; }
+  const kopf = document.createElement("div");
+  kopf.className = "kopf";
+  kopf.append(s.name, Object.assign(document.createElement("span"), { className: "ort", textContent: ` · ${s.ortsteil}` }));
+  const zeilen = [...r.parteien].reverse().map(p => {
+    const v = r.w[p][s.ortsteil][t];
+    const z = document.createElement("div");
+    z.className = "zeile";
+    const spur = Object.assign(document.createElement("span"), { className: "spur" });
+    const balken = Object.assign(document.createElement("span"), { className: "balken" });
+    balken.style.background = parteifarbe(p);
+    balken.style.width = v === null ? "0" : `${Math.min(100, v)}%`;
+    if (v !== null) spur.append(balken);
+    z.append(Object.assign(document.createElement("span"), { textContent: p }), spur,
+             Object.assign(document.createElement("span"), { className: "wert", textContent: v === null ? "nicht angetreten" : zahl(v) + " %" }));
+    return z;
+  });
+  const fuss = Object.assign(document.createElement("div"), { className: "fuss",
+    textContent: `${r.z[t]} · Wahlbeteiligung ${zahl(r.beteiligung[s.ortsteil][t])} %` });
+  box.replaceChildren(kopf, ...zeilen, fuss);
+  box.hidden = false;
+  // Neben den Mauszeiger, am Fensterrand auf die andere Seite
+  const b = box.getBoundingClientRect();
+  box.style.left = (mausX + 16 + b.width > innerWidth ? mausX - 16 - b.width : mausX + 16) + "px";
+  box.style.top = Math.max(8, Math.min(mausY - b.height / 2, innerHeight - b.height - 8)) + "px";
 }
 
 function kennzahlenZeile(k) {
@@ -454,7 +541,7 @@ function zeichneLinie() {
   });
   const [, aktuell] = dunkel() ? ["dunkel", "hell"] : ["hell", "dunkel"];
   el("unter-linie").textContent = zustand.ansicht === "einzeln"
-    ? "Alle Diagramme folgen der Linie von Grünau-Nord (links) nach Paunsdorf Nord (rechts). Haltestellennamen stehen unter dem ersten Diagramm, in den anderen erscheinen sie beim Darüberfahren. Jedes Diagramm hat seine eigene Skala. Graue Linie: Wert der Gesamtstadt, wenn vergleichbar."
+    ? "Alle Diagramme folgen der Linie von Grünau-Nord (links) nach Paunsdorf Nord (rechts). Haltestellennamen stehen unter dem ersten Diagramm. Beim Darüberfahren wird die Haltestelle in allen Diagrammen hervorgehoben. Jedes Diagramm hat seine eigene Skala. Graue Linie: Wert der Gesamtstadt, wenn vergleichbar."
     : `Jede Zeile ein Zeitpunkt, neueste oben. Einfarbig: ${aktuell} = hoher Wert. Hitze: rot = wärmer, blau = kühler als das Stadtmittel.`;
 }
 
