@@ -32,6 +32,8 @@ RAW_DIR = Path(__file__).resolve().parent / "data" / "raw"
 KDVALUES_URL = "https://statistik.leipzig.de/opendata/api/kdvalues"
 # Ausgewählt aus allen kleinräumigen Datensätzen des Open-Data-Portals.
 # "U" = beruht auf der Bürgerumfrage, nur alle zwei Jahre.
+
+# Beispiel: statistik.leipzig.de/opendata/api/kdvalues?kategorie_nr=4&rubrik_nr=4&periode=y&format=csv
 INDIKATOREN = {
     # Name der Datei:           (kategorie_nr, rubrik_nr)
     # Bevölkerung
